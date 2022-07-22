@@ -3,7 +3,7 @@
 import sympy as sp
 import numpy as np
 import rospy
-from std_msgs.msg import Float64MultiArray, Float64
+from std_msgs.msg import Float64MultiArray
 
 
 def get_deg(h):

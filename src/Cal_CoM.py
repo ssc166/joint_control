@@ -44,22 +44,16 @@ def callback(data):
     CoMlist = Float64MultiArray()
     CoMlist.data = [z_com, theta_P]
 
-    pub.publish(CoMlist)
-    
-    
-    
-# def listener():
-#     rospy.init_node('listener', anonymous=True)
-#     rospy.Subscriber('array', Float64MultiArray)
-#     rospy.spin()
+    pub_roll.publish(CoMlist)
+    pub_pitch.publish(CoMlist)
 
 if __name__ == '__main__':
     try:  
         while True:
             rospy.init_node('listener', anonymous=True)
             rospy.Subscriber('array', Float64MultiArray,callback)
-            pub = rospy.Publisher('CoM', Float64MultiArray, queue_size=100)
-            
+            pub_roll = rospy.Publisher('CoM_Roll', Float64MultiArray, queue_size=100)
+            pub_pitch = rospy.Publisher('CoM_Pitch', Float64MultiArray, queue_size=100)
             
             rospy.spin()
     except rospy.ROSInterruptException:

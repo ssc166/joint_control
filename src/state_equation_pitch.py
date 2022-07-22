@@ -32,10 +32,8 @@ def Cal_Pitch_SS(z_com):
     
     eq_point = {sp.sin(theta):theta, sp.cos(theta):1, thetad**2:0, f_d:0}
     tau_eq = sp.simplify(tau.subs(eq_point))
-    Ml, Cl, Gl, Wl = get_EoM_from_T(tau_eq,qdd,g,u)
     
     Ml, Cl, Gl, Wl = get_EoM_from_T(tau_eq,qdd,g,u)
-
     param = {I_w:0.004806909, I_b:1.9460274096682204, m_w:2.292, m_b:22.477, r:0.069, l_cg: z_com,  g:9.81}
 
     Mlp = msubs(Ml, param)

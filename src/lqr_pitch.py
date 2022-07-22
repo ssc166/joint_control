@@ -17,9 +17,6 @@ from numpy.linalg import matrix_rank, eig
 import matplotlib.pyplot as plt
 import state_equation_pitch as sep
 
-
-
-
 def gazebo_setting():
     os.system('rosservice call /gazebo/set_physics_properties "{time_step: 0.001, max_update_rate: 1000.0, gravity: {x: 0.0, y: 0.0, z: -9.8}, ode_config: {auto_disable_bodies: False, sor_pgs_precon_iters: 0, sor_pgs_iters: 200, sor_pgs_w: 1.0, sor_pgs_rms_error_tol: 0.0, contact_surface_layer: 0.001, contact_max_correcting_vel: 100.0, cfm: 0.0, erp: 0.2, max_contacts: 20}}"')
     # os.system('rosservice call gazebo/unpause_physics')
@@ -99,23 +96,6 @@ def Trapezoidal_Traj_Gen_Given_Amax_and_T(amax,T,dt):
 def Path_Gen(start,goal,traj):
     path = start + traj*(goal-start)
     return path
-
-def theta_target_roll(ankle_deg, hip_deg):
-    DEG2RAD = np.pi/180
-    ankle_deg = ankle_deg*DEG2RAD
-    hip_deg = hip_deg*DEG2RAD
-    
-    theta_target = np.array([ankle_deg, hip_deg])
-    
-    return theta_target
-
-def theta_target(hip_deg):
-    DEG2RAD = np.pi/180
-    hip_deg = hip_deg*DEG2RAD
-    
-    theta_target = np.array([hip_deg])
-    
-    return theta_target
         
 def get_link_state(link_name_main, reference_frame):
     
@@ -210,6 +190,58 @@ def linvel2wheelvel(linvel):
     
     return wheelvel
 
+def get_theta_P():
+    m1 = 2.486 + 0.3
+    m2 = 1.416
+    m3 = 1.739
+    m4 = 3.25+12.5
+
+    L1 = 0.171
+    L2 = 0.279942
+    L3 = 0.280
+    L4 = 0.346
+
+    L1c = L1 / 2
+    L2c = L2 *0.75
+    L3c = L3 / 2
+    L4c = 0.17188
+    
+    L1_x, L1_y, L1_z = get_link_ori(link_name_list[0], 'world')
+    L2_x, L2_y, L2_z = get_link_ori(link_name_list[1], link_name_list[0])
+    L3_x, L3_y, L3_z = get_link_ori(link_name_list[2], link_name_list[1])
+    L4_x, L4_y, L4_z = get_link_ori(link_name_list[3], link_name_list[2])
+    
+    
+    
+    theta_1 = L1_y
+    theta_2 = L1_y + L2_y
+    theta_3 = L1_y + L2_y + L3_y
+    theta_4 = L1_y + L2_y + L3_y + L4_y
+    
+    x_1 = L1c * sp.cos(theta_1)
+    x_2 = L1 * sp.cos(theta_1) + L2c * sp.cos(theta_2)
+    x_3 = L1 * sp.cos(theta_1) + L2 * sp.cos(theta_2) + L3c*sp.cos(theta_3)
+    x_4 = L1 * sp.cos(theta_1) + L2 * sp.cos(theta_2) + L3 * sp.cos(theta_3) + L4c * sp.cos(theta_4)
+    x_com = (m1*x_1 + m2*x_2 + m3*x_3+ m4*x_4) / (m1 + m2 + m3 + m4)
+    
+    z_1c = L1c * sp.sin(theta_1)
+    z_2c = L1 * sp.sin(theta_1) + L2c * sp.sin(theta_2)
+    z_3c = L1 * sp.sin(theta_1) + L2 * sp.sin(theta_2) + L3c*sp.sin(theta_3)
+    z_4c = L1 * sp.sin(theta_1) + L2 * sp.sin(theta_2) + L3 * sp.sin(theta_3) + L4c * sp.sin(theta_4)
+
+    z_com = (m1*z_1c + m2*z_2c + m3*z_3c + m4*z_4c) / (m1 + m2 + m3 + m4)
+    theta_P = np.arctan(float(x_com)/float(z_com))
+    
+    return theta_P
+
+def callback(data):
+    global z_com
+    
+    CoMlist = data.data
+    z_com = CoMlist[0]
+
+    
+
 def print_graph():
     
     plt.plot(sec_store, deg_store)
@@ -225,7 +257,7 @@ def print_graph():
     plt.show()
     
 #######################################################################################################
-A, B, C, D = sep.Cal_Pitch_SS(0.8)
+A, B, C, D = sep.Cal_Pitch_SS(z_com)
 
 # q = [phi, theta, phi_dot, theta_dot]
 Q = sp.Matrix([ [0.3,    0,    0,    0],
@@ -249,10 +281,11 @@ wheel_state = []
 wheel_name = 'wheel_link'
 wheel_name_list = [wheel_name]
 
-mid_name = 'hip_link'
-low_name = 'ankle_roll_yaw_link'
-top_name = 'cmg'
-link_name_list = [mid_name, low_name, top_name]
+ankle_link = 'ankle_link'
+knee_ankle_link = 'knee_ankle_link'
+hip_to_knee_link = 'hip_to_knee_link'
+cmg_link = 'cmg'
+link_name_list = [ankle_link, knee_ankle_link, hip_to_knee_link, cmg_link]
 
 body_state = []
 body_name = 'wheeled_inverted_pendulum'
@@ -273,17 +306,17 @@ if __name__ == '__main__':
         rospy.init_node('Pitch_Controller', anonymous=False) 
         
         pub_w = rospy.Publisher('/wheeled_inverted_pendulum/wheel/command', Float64, queue_size=100)
-        pub_ank = rospy.Publisher('/wheeled_inverted_pendulum/ankle_pitch/command', Float64, queue_size=100)
-        pub_knee = rospy.Publisher('/wheeled_inverted_pendulum/knee/command', Float64, queue_size=100)
-        pub_hip = rospy.Publisher('/wheeled_inverted_pendulum/hip_pitch/command', Float64, queue_size=100)
-        pub_z = rospy.Subscriber('CoM', Float64MultiArray, queue_size=100)
+        rospy.Subscriber('CoM_Pitch', Float64MultiArray, callback)
         
-        rate = rospy.Rate(100)
+        rate = rospy.Rate(1000)
         gazebo_setting()
 
         
         cur_time = time.time()    
-        sec_time = time.time()           
+        sec_time = time.time()  
+        
+        print(z_com)
+                 
          
         while True:
 
@@ -292,29 +325,23 @@ if __name__ == '__main__':
             sec_cur_time = time.time()
             dt = cur_time - last_time 
             sec =  sec_cur_time - sec_time
-            
-            pub_ank.publish(0)
-            pub_knee.publish(0)
-            pub_hip.publish(0)
-            
+ 
             wheel_ori_x, wheel_ori_y, wheel_ori_z = get_wheel_ori()
             wheel_vel_x, wheel_vel_y, wheel_vel_z = get_wheel_vel()
-            body_ori_x, body_ori_y, body_ori_z = get_body_ori()
-            body_vel_x, body_vel_y, body_vel_z = get_body_vel()
-            # link_ori_x, link_ori_y, link_ori_z = get_link_ori(link_name_list[2], 'world')
-            # link_vel_x, link_vel_y, link_vel_z = get_link_vel(link_name_list[2], 'world')
+            
+            theta_P = get_theta_P()
 
-            x0 = np.array([wheel_ori_y,body_ori_y,wheel_vel_y,body_vel_y])
+            x0 = np.array([wheel_ori_y,theta_P,wheel_vel_y,body_vel_y])
 
             u = -K @ ( x0 )
             pub_w.publish(u)
 
-            deg_store.append(body_ori_y*RAD2DEG)
-            sec_store.append(sec)
+            # deg_store.append(theta_P*RAD2DEG)
+            # sec_store.append(sec)
             
             if loop_cnt % 10 == 0:
                 print('Wheel_velocity  (rad/s): ', wheel_vel_y)
-                print('Pitch             (deg): ', body_ori_y*RAD2DEG)
+                print('Pitch             (deg): ', theta_P*RAD2DEG)
 
                 print('====================================')  
             
