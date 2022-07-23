@@ -16,6 +16,8 @@ from sympy.physics.mechanics import *
 from numpy.linalg import matrix_rank, eig
 import matplotlib.pyplot as plt
 import state_equation_pitch as sep
+import utils
+
 
 def gazebo_setting():
     os.system('rosservice call /gazebo/set_physics_properties "{time_step: 0.001, max_update_rate: 1000.0, gravity: {x: 0.0, y: 0.0, z: -9.8}, ode_config: {auto_disable_bodies: False, sor_pgs_precon_iters: 0, sor_pgs_iters: 200, sor_pgs_w: 1.0, sor_pgs_rms_error_tol: 0.0, contact_surface_layer: 0.001, contact_max_correcting_vel: 100.0, cfm: 0.0, erp: 0.2, max_contacts: 20}}"')
@@ -27,75 +29,6 @@ def pitch_K_gain():
     K, S, E = control.lqr(A, B, Q, R)
     
     return K, S, E
-
-def quaternion_to_euler_angle(msg):
-    x = msg.x
-    y = msg.y
-    z = msg.z
-    w = msg.w
-    
-    ysqr = y * y
-    
-    t0 = +2.0 * (w * x + y * z)
-    t1 = +1.0 - 2.0 * (x * x + ysqr)
-    X = math.atan2(t0, t1)
-    
-    t2 = +2.0 * (w * y - z * x)
-    t2 = +1.0 if t2 > +1.0 else t2
-    t2 = -1.0 if t2 < -1.0 else t2
-    Y = math.asin(t2)
-    
-    t3 = +2.0 * (w * z + x * y)
-    t4 = +1.0 - 2.0 * (ysqr + z * z)
-    Z = math.atan2(t3, t4)
-    
-    return X, Y, Z
-
-def Trapezoidal_Traj_Gen_Given_Amax_and_T(amax,T,dt):
-    """
-    
-    Create a trapezoidal velocity profile
-
-    amax : Max acceleration
-    T : Time
-    dt : Amount of time change
-    
-    """
-    a = amax
-    
-    if a*math.pow(T,2) >= 4:     
-        v = 0.5*(a*T - math.pow(a,0.5)*math.pow((a*math.pow(T,2)-4),0.5))
-    else:
-        return False, False            
-    
-    time = 0
-    t_save = time
-    traj_save = np.array([0,0,0])
-    while T >= time:
-        if time >= 0 and time <= (v/a):
-            sddot = a
-            sdot = a*time
-            s = 0.5*a*math.pow(time,2)
-            
-        if time > (v/a) and time <= (T-v/a):
-            sddot = 0
-            sdot = v 
-            s = v*time - 0.5*math.pow(v,2)/a
-            
-        if time > (T-v/a) and time <= T:
-            sddot = -a
-            sdot = a*(T-time)
-            s = (2*a*v*T - 2*math.pow(v,2) - math.pow(a,2)*math.pow((time-T),2))/(2*a)
-        
-        t_save = np.vstack((t_save, time))
-        traj_save = np.vstack((traj_save, np.array([s,sdot,sddot])))
-        time += dt
-
-    return t_save, traj_save
-
-def Path_Gen(start,goal,traj):
-    path = start + traj*(goal-start)
-    return path
         
 def get_link_state(link_name_main, reference_frame):
     
@@ -110,7 +43,7 @@ def get_link_ori(link_name_main, reference_frame):
     
     link_state = get_link_state(link_name_main, reference_frame)
     
-    X, Y, Z = quaternion_to_euler_angle(link_state.link_state.pose.orientation)
+    X, Y, Z = utils.quaternion_to_euler_angle(link_state.link_state.pose.orientation)
     link_ori_x = X
     link_ori_y = Y
     link_ori_z = Z
@@ -138,7 +71,7 @@ def get_body_ori():
     
     body_state = get_model_state(body_name)
     
-    X, Y, Z = quaternion_to_euler_angle(body_state.pose.orientation)
+    X, Y, Z = utils.quaternion_to_euler_angle(body_state.pose.orientation)
     body_ori_x = X
     body_ori_y = Y
     body_ori_z = Z
@@ -166,7 +99,7 @@ def get_wheel_ori():
     
     wheel_state = get_wheel_state(wheel_name)
     
-    X, Y, Z = quaternion_to_euler_angle(wheel_state.link_state.pose.orientation)
+    X, Y, Z = utils.quaternion_to_euler_angle(wheel_state.link_state.pose.orientation)
     wheel_ori_x = X
     wheel_ori_y = Y
     wheel_ori_z = Z
@@ -210,8 +143,6 @@ def get_theta_P():
     L2_x, L2_y, L2_z = get_link_ori(link_name_list[1], link_name_list[0])
     L3_x, L3_y, L3_z = get_link_ori(link_name_list[2], link_name_list[1])
     L4_x, L4_y, L4_z = get_link_ori(link_name_list[3], link_name_list[2])
-    
-    
     
     theta_1 = L1_y
     theta_2 = L1_y + L2_y

@@ -4,8 +4,55 @@ import sympy as sp
 import numpy as np
 import rospy
 from std_msgs.msg import Float64MultiArray, Float64
+from gazebo_msgs.srv import GetModelState, ApplyBodyWrench, GetLinkState
+import math
+import utils
+
+def get_link_state(link_name_main, reference_frame):
+    
+    get_state = rospy.ServiceProxy("/gazebo/get_link_state", GetLinkState)
+    
+    link_state = get_state(link_name= link_name_main, reference_frame = reference_frame)
+
+    return link_state
+
+def get_link_ori(link_name_main, reference_frame):
+    global link_state
+    
+    link_state = get_link_state(link_name_main, reference_frame)
+    
+    X, Y, Z = utils.quaternion_to_euler_angle(link_state.link_state.pose.orientation)
+    link_ori_x = X
+    link_ori_y = Y
+    link_ori_z = Z
+     
+    return link_ori_x, link_ori_y, link_ori_z
+
+def get_cur_deg():
+
+    ankle_link = 'ankle_link'
+    knee_ankle_link = 'knee_ankle_link'
+    hip_to_knee_link = 'hip_to_knee_link'
+    cmg_link = 'cmg'
+    link_name_list = [ankle_link, knee_ankle_link, hip_to_knee_link, cmg_link]
+
+    L1_x, L1_y, L1_z = get_link_ori(link_name_list[0], 'world')
+    L2_x, L2_y, L2_z = get_link_ori(link_name_list[1], link_name_list[0])
+    L3_x, L3_y, L3_z = get_link_ori(link_name_list[2], link_name_list[1])
+    L4_x, L4_y, L4_z = get_link_ori(link_name_list[3], link_name_list[2])
+
+    thetalist = np.array([L1_y, L2_y, L3_y, L4_y])
+
+    return thetalist
+
+def Cal_Traj():
+    thetalist = get_cur_deg()
+    thetalistd = np.array([theta[0], theta[1], theta[2], theta[3]])
+
+    time, traj = utils.Trapezoidal_Traj_Gen_Given_Amax_and_T(1.5,2,0.01)
 
 def callback(data):
+    global theta
     theta = data.data
     theta_1 = theta[0]
     theta_2 = theta[0] + theta[1]
@@ -46,6 +93,8 @@ def callback(data):
 
     pub_roll.publish(CoMlist)
     pub_pitch.publish(CoMlist)
+
+#######################################################################################################
 
 if __name__ == '__main__':
     try:  
