@@ -6,7 +6,7 @@ import rospy
 from std_msgs.msg import Float64MultiArray, Float64
 from gazebo_msgs.srv import GetModelState, ApplyBodyWrench, GetLinkState
 import math
-import utils
+import WIP_utils as utils
 
 def get_link_state(link_name_main, reference_frame):
     
@@ -46,10 +46,18 @@ def get_cur_deg():
     return thetalist
 
 def Cal_Traj():
+
     thetalist = get_cur_deg()
-    thetalistd = np.array([theta[0], theta[1], theta[2], theta[3]])
 
     time, traj = utils.Trapezoidal_Traj_Gen_Given_Amax_and_T(1.5,2,0.01)
+    traj_th1 = utils.Path_Gen(thetalist[0], theta[0], traj[:,0])
+    traj_th2 = utils.Path_Gen(thetalist[1], theta[1], traj[:,0])
+    traj_th3 = utils.Path_Gen(thetalist[2], theta[2], traj[:,0])
+    traj_th4 = utils.Path_Gen(thetalist[3], theta[3], traj[:,0])
+
+    n = len(time)
+
+    return n, traj_th1, traj_th2, traj_th3, traj_th4
 
 def callback(data):
     global theta
@@ -58,6 +66,8 @@ def callback(data):
     theta_2 = theta[0] + theta[1]
     theta_3 = theta[0] + theta[1] + theta[2]
     theta_4 = theta[0] + theta[1] + theta[2] + theta[3]
+
+    n, traj_th1, traj_th2, traj_th3, traj_th4 = Cal_Traj()
     
     m1 = 2.486 + 0.3
     m2 = 1.416
