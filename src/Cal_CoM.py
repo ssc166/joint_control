@@ -67,45 +67,24 @@ def get_cur_vel():
  
     return dthetalist    
 
-def Cal_Deg_Traj():
-    global time, traj
-
+def get_torque_traj():
+    time, traj = utils.Trapezoidal_Traj_Gen_Given_Amax_and_T(1,2.5,0.01)
     thetalist = get_cur_deg()
 
-    time, traj = utils.Trapezoidal_Traj_Gen_Given_Amax_and_T(1.5,2,0.01)
     traj_th1 = utils.Path_Gen(thetalist[0], theta[0], traj[:,0])
     traj_th2 = utils.Path_Gen(thetalist[1], theta[1], traj[:,0])
     traj_th3 = utils.Path_Gen(thetalist[2], theta[2], traj[:,0])
     traj_th4 = utils.Path_Gen(thetalist[3], theta[3], traj[:,0])
-
-    return traj_th1, traj_th2, traj_th3, traj_th4
-
-def Cal_Vel_Traj():
-
-    thetalist = get_cur_deg()
 
     traj_dth1 = utils.Path_Gen(thetalist[0], theta[0], traj[:,1])
     traj_dth2 = utils.Path_Gen(thetalist[1], theta[1], traj[:,1])
     traj_dth3 = utils.Path_Gen(thetalist[2], theta[2], traj[:,1])
     traj_dth4 = utils.Path_Gen(thetalist[3], theta[3], traj[:,1])
 
-    return traj_dth1, traj_dth2, traj_dth3, traj_dth4
-
-def Cal_Acc_Traj():
-
-    thetalist = get_cur_deg()
-
     traj_ddth1 = utils.Path_Gen(thetalist[0], theta[0], traj[:,2])
     traj_ddth2 = utils.Path_Gen(thetalist[1], theta[1], traj[:,2])
     traj_ddth3 = utils.Path_Gen(thetalist[2], theta[2], traj[:,2])
     traj_ddth4 = utils.Path_Gen(thetalist[3], theta[3], traj[:,2])
-
-    return traj_ddth1, traj_ddth2, traj_ddth3, traj_ddth4
-
-def get_torque_traj():
-
-    thetalist = get_cur_deg()
-    dthetalist = get_cur_vel()
 
     eint = np.array([0.2, 0.2, 0.2])
     g = np.array([0, 0, -9.8])
@@ -133,15 +112,26 @@ def get_torque_traj():
     Slist = np.array([[1, 0, 1,      0, 1,     0],
                         [0, 1, 0, -0.089, 0,     0],
                         [0, 1, 0, -0.089, 0, 0.425]]).T
-    thetalistd = np.array([theta[0], theta[1], theta[2], theta[3]])
-    dthetalistd = np.array([2, 1.2, 2])
-    ddthetalistd = np.array([0.1, 0.1, 0.1])
     Kp = 1.3
     Ki = 1.2
     Kd = 1.1
 
-    mr.ComputedTorque(thetalist, dthetalist, eint, g, Mlist, Glist, Slist, \
+    torquelist = np.array([0,0,0])
+
+    for i in range(0, len(time)-1):
+
+        thetalist = np.array([traj_th1[i], traj_th2[i], traj_th3[i], traj_th4[i]])
+        dthetalist = np.array([traj_dth1[i], traj_dth2[i], traj_dth3[i], traj_dth4[i]])
+
+        thetalistd = np.array([traj_th1[i+1], traj_th2[i+1], traj_th3[i+1], traj_th4[i+1]])
+        dthetalistd = np.array([traj_dth1[i+1], traj_dth2[i+1], traj_dth3[i+1], traj_dth4[i+1]])
+        ddthetalistd = np.array([traj_ddth1[i+1], traj_ddth2[i+1], traj_ddth3[i+1], traj_ddth4[i+1]])
+
+        torque = mr.ComputedTorque(thetalist, dthetalist, eint, g, Mlist, Glist, Slist, \
                    thetalistd, dthetalistd, ddthetalistd, Kp, Ki, Kd)
+
+        torquelist = np.vstack((torquelist,torque))  
+    return torquelist
 
 
 
@@ -151,13 +141,19 @@ def callback(data):
     global theta
     global L1, L2, L3, L4
 
+    rospy.loginfo('Subscribe Target Angle')
+
     theta = data.data
     theta_1 = theta[0]
     theta_2 = theta[0] + theta[1]
     theta_3 = theta[0] + theta[1] + theta[2]
     theta_4 = theta[0] + theta[1] + theta[2] + theta[3]
 
-    n, traj_th1, traj_th2, traj_th3, traj_th4 = Cal_Traj()
+    taulist = get_torque_traj()
+    tau1list = (taulist[:,0]).tolist()
+    tau2list = (taulist[:,1]).tolist()
+    tau3list = (taulist[:,2]).tolist()
+    tau4list = (taulist[:,3]).tolist()
     
     m1 = 2.486 + 0.3
     m2 = 1.416
@@ -191,18 +187,25 @@ def callback(data):
     CoMlist = Float64MultiArray()
     CoMlist.data = [z_com, theta_P]
 
+    torquelist = Float64MultiArray()
+    torquelist.data = [tau1list, tau2list, tau3list, tau4list]
+
     pub_roll.publish(CoMlist)
     pub_pitch.publish(CoMlist)
+    pub_traj.publish(torquelist)
 
 #######################################################################################################
 
 if __name__ == '__main__':
     try:  
+        pub_roll = rospy.Publisher('CoM_Roll', Float64MultiArray, queue_size=100)
+        pub_pitch = rospy.Publisher('CoM_Pitch', Float64MultiArray, queue_size=100)
+        pub_traj = rospy.Publisher('Angle_Traj', Float64MultiArray, queue_size=100)
+
         while True:
             rospy.init_node('CoM_Calculator', anonymous=True)
             rospy.Subscriber('array', Float64MultiArray,callback)
-            pub_roll = rospy.Publisher('CoM_Roll', Float64MultiArray, queue_size=100)
-            pub_pitch = rospy.Publisher('CoM_Pitch', Float64MultiArray, queue_size=100)
+            
             
             rospy.spin()
     except rospy.ROSInterruptException:
