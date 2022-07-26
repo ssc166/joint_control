@@ -1,0 +1,309 @@
+<?xml version="1.0"?>
+
+<robot name="robot_body_wheel" xmlns:xacro="http://www.ros.org/wiki/xacro">  
+
+    <xacro:include filename="$(find cmg_robot_description)/urdf/robot_materials.xacro" />
+
+	
+    <xacro:macro name="body" params="">
+<!-- 
+25.278kg, origin(4.226, 2.593, 739.962)
+
+3.918138175 0.000236782 0.001965254 3.858568504 0.009218968 0.146846485 
+
+# pitch
+param = {I_w:0.006512625, I_b:2.662841268, m_w:2, m_b:23.278, r:0.085, l_cg:0.803539,  g:9.81}
+
+# roll
+param = {w:314.2, I_fx:0.004456379, I_fy:0.008462463, I_bx:3.918138175,  m_all:25.278, r:0.085, l:1.053442+0.085,  g:9.81} -->
+
+
+        <!-- <link name="base">		    
+		</link>
+
+        <joint name="base_joint" type="fixed">
+		    <origin xyz="0 0 0.085" rpy="0.0 0.0 0.0" /> 
+		    <parent link="base"/>
+		    <child link="link_1"/>
+		</joint>  -->
+
+<!-- ######################################################################################### -->
+
+        <link name="link_1">
+            <visual>
+                <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/> 
+                <geometry>
+                    <mesh filename="package://cmg_robot_description/meshes/ankle_link.stl" scale="0.001 0.001 0.001"/>         
+                </geometry>
+                <material name="light grey"/>
+                    
+                    
+            </visual>
+
+            <collision>
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <geometry>
+                    <!-- <box size = "  0.127 0.168778 0.958442 "/>                     -->
+                    <mesh filename="package://cmg_robot_description/meshes/ankle_link.stl" scale="0.001 0.001 0.001"/>
+                </geometry>
+            </collision>
+
+            <inertial>
+                <mass value="2.083" /> 
+                <origin xyz="0 0 0.220562" rpy="0.0 0.0 0"/>
+                <inertia ixx="0.011142275" ixy="0.000004610"  ixz="0.001402311"  iyy="0.012234321"  iyz="-0.000002579" izz="0.004310165" />
+            </inertial>
+        </link> 
+
+        <joint name="link_1_joint" type="revolute">
+		    <!-- <origin xyz="0 -0.0045 -0.451221" rpy="0.0 0.0 0.0" />  -->
+		    <origin xyz="0 0 0.2575" rpy="0.0 0.0 0.0" /> 
+            <axis xyz="0 1 0"/>
+		    <parent link="link_2"/>
+		    <child link="link_1" />
+            <limit effort="100" velocity="1000"/>
+            <joint_properties damping="1.0" friction="1.0"/>
+		</joint> 
+
+        <link name="link_2">
+            <visual>
+                <origin xyz="0.0 0.0 0.0" rpy="3.14 0 0"/> 
+                <geometry>
+                    <mesh filename="package://cmg_robot_description/meshes/ankle_joink_link.stl" scale="0.001 0.001 0.001"/>         
+                </geometry>
+                <material name="light grey"/>
+                    
+            </visual>
+
+            <collision>
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <geometry>
+                    <!-- <box size = "  0.127 0.168778 0.958442 "/>                     -->
+                    <mesh filename="package://cmg_robot_description/meshes/ankle_joink_link.stl" scale="0.001 0.001 0.001"/>
+                </geometry>
+            </collision>
+
+            <inertial>
+                <mass value="2.386" /> 
+                <origin xyz="0 0 0.139971" rpy="0.0 0.0 0"/>
+                <inertia ixx="0.003950987" ixy="0.000238179"  ixz="0.000315902"  iyy="0.004226334"  iyz="0.000351372" izz="0.004633548" />
+            </inertial>
+        </link>    
+
+        <joint name="link_2_joint" type="fixed">
+		    <origin xyz="0 0 0" rpy="0.0 0.0 0.0" /> 
+            <!-- <axis xyz="1 0 0"/> -->
+		    <parent link="link_3"/>
+		    <child link="link_2" />
+            <!-- <limit effort="100" velocity="1000"/>
+            <joint_properties damping="1.0" friction="1.0"/> -->
+		</joint> k name="base">		    
+		</link>
+
+        <joint name="base_joint" type="fixed">
+		    <origin xyz="0 0 0.085" rpy="0.0 0.0 0.0" /> 
+		    <parent link="base"/>
+		    <child link="link_1"/>
+		</joint> 
+		    <origin xyz="0 0 -0.279942" rpy="0.0 0.0 0.0" /> 
+            <!-- <axis xyz="0 1 0"/> -->
+		    <parent link="link_4"/>
+		    <child link="link_3" />
+            <!-- <limit effort="100" velocity="1000"/>
+            <joint_properties damping="1.0" friction="1.0"/> -->
+		</joint> 
+
+        <link name="link_4">
+            <visual>
+                <origin xyz="0.0 0.0665 0.28" rpy="3.14 0 0"/> 
+                <geometry>
+                    <mesh filename="package://cmg_robot_description/meshes/hip_to_knee_link.stl" scale="0.001 0.001 0.001"/>         
+                </geometry>
+                <material name="light grey"/>
+                    
+            </visual>
+
+            <collision>
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <geometry>
+                    <!-- <box size = "  0.127 0.168778 0.958442 "/>                     -->
+                    <mesh filename="package://cmg_robot_description/meshes/hip_to_knee_link.stl" scale="0.001 0.001 0.001"/>
+                </geometry>
+            </collision>
+
+            <inertial>
+                <mass value="2.175" /> 
+                <origin xyz="0 0 0.14" rpy="0.0 0.0 0"/>
+                <inertia ixx="0.007175717" ixy="0.000086944"  ixz="0.000249192"  iyy="0.006609551"  iyz="-0.000206119" izz="0.002458394" />
+            </inertial>
+        </link> 
+
+        <joint name="link_4_joint" type="revolute">
+		    <!-- <origin xyz="0 -0.0045 -0.451221" rpy="0.0 0.0 0.0" />  -->
+		    <origin xyz="0 0 -0.28" rpy="0.0 0.0 0.0" /> 
+            <axis xyz="0 1 0"/>
+		    <parent link="link_5"/>
+		    <child link="link_4" />
+            <limit effort="100" velocity="1000"/>
+            <joint_properties damping="1.0" friction="1.0"/>
+		</joint> 
+
+        <link name="link_5">
+            <visual>
+                <origin xyz="-0.042455 0 0" rpy="3.14 0 0"/> 
+                <geometry>
+                    <mesh filename="package://cmg_robot_description/meshes/hip_pitch_link.stl" scale="0.001 0.001 0.001"/>         
+                </geometry>
+                <material name="light grey"/>
+            </visual>
+
+            <collision>
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <geometry>
+                    <!-- <box size = "  0.127 0.168778 0.958442 "/>                     -->
+                    <mesh filename="package://cmg_robot_description/meshes/hip_pitch_link.stl" scale="0.001 0.001 0.001"/>
+                </geometry>
+            </collision>
+
+            <inertial>
+                <mass value="3.325" /> 
+                <origin xyz="0 0 0" rpy="0.0 0.0 0"/>
+                <inertia ixx="0.006208194" ixy="0.000396490"  ixz="-0.000685512"  iyy="0.006554912"  iyz="-0.000658520" izz="0.006773627" />
+            </inertial>
+        </link>  
+
+ <!-- ######################################################################################### -->
+
+        <joint name="wheel_joint" type="continuous">
+		    <!-- <origin xyz="0 -0.0045 -0.451221" rpy="0.0 0.0 0.0" />  -->
+		    <origin xyz="0 0 0" rpy="0.0 0.0 0.0" /> 
+            <axis xyz="0 1 0"/>
+		    <parent link="link_1"/>
+		    <child link="wheel" />
+            <limit effort="100" velocity="1000"/>
+            <joint_properties damping="1.0" friction="1.0"/>
+		</joint> 
+
+<!-- ######################################################################################### -->
+
+        <link name="wheel">
+            <visual>
+                <origin xyz="0.0 0.0 0.0" rpy="0 0.0 1.57"/> 
+                <geometry>
+                    <mesh filename="package://cmg_robot_description/meshes/wheel.stl" scale="0.001 0.001 0.001"/>         
+                </geometry>
+                <material name="white"/>
+            </visual>
+
+            <collision>                
+                <origin xyz="0 0 0" rpy="0 0.0 1.57"/>
+                <!-- pitch -->
+                <!-- <origin xyz="0 0 0" rpy="1.57 0 0"/> -->
+                <!-- roll -->
+                <!-- <origin xyz="0 0 0" rpy="0.0 1.57 0"/> -->
+                <geometry>
+                    <mesh filename="package://cmg_robot_description/meshes/wheel.stl" scale="0.001 0.001 0.001"/>                 
+                    <!-- pitch -->
+                    <!-- <cylinder radius="0.085" length="0.05"/>  -->
+                    <!-- roll -->
+                    <!-- <cylinder radius="0.085" length="1"/> -->
+                    
+                </geometry>
+            </collision>
+
+            <inertial>
+                <mass value="2.0" />
+                <origin xyz="0 0 0" />
+                <inertia ixx="0.003623375" ixy="0.0" ixz="0.0" iyy="0.006512625" iyz="0.0" izz="0.003623375"/>
+            </inertial>
+        </link>
+
+<!-- ######################################################################################### -->
+
+        <gazebo reference="link_1">
+            <mu1>1.0</mu1>
+            <mu2>1.0</mu2> 
+            <kp>1e+13</kp>
+            <kd>1.0</kd>
+            <maxVel>0.001</maxVel>
+            <minDepth>0.00000000001</minDepth>
+            <turnGravityOff>false</turnGravityOff>
+            <gravity>1</gravity>
+            <material>Gazebo/Grey</material>
+        </gazebo>
+
+        <gazebo reference="link_2">
+            <mu1>1.0</mu1>
+            <mu2>1.0</mu2> 
+            <kp>1e+13</kp>
+            <kd>1.0</kd>
+            <maxVel>0.001</maxVel>
+            <minDepth>0.00000000001</minDepth>
+            <turnGravityOff>false</turnGravityOff>
+            <gravity>1</gravity>
+            <material>Gazebo/Grey</material>
+        </gazebo>
+
+        <gazebo reference="link_3">
+            <mu1>1.0</mu1>
+            <mu2>1.0</mu2> 
+            <kp>1e+13</kp>
+            <kd>1.0</kd>
+            <maxVel>0.001</maxVel>
+            <minDepth>0.00000000001</minDepth>
+            <turnGravityOff>false</turnGravityOff>
+            <gravity>1</gravity>
+            <material>Gazebo/Grey</material>
+        </gazebo>
+
+        <gazebo reference="link_4">
+            <mu1>1.0</mu1>
+            <mu2>1.0</mu2> 
+            <kp>1e+13</kp>
+            <kd>1.0</kd>
+            <maxVel>0.001</maxVel>
+            <minDepth>0.00000000001</minDepth>
+            <turnGravityOff>false</turnGravityOff>
+            <gravity>1</gravity>
+            <material>Gazebo/Grey</material>
+        </gazebo>
+
+        <gazebo reference="link_5">
+            <mu1>1.0</mu1>
+            <mu2>1.0</mu2> 
+            <kp>1e+13</kp>
+            <kd>1.0</kd>
+            <maxVel>0.001</maxVel>
+            <minDepth>0.00000000001</minDepth>
+            <turnGravityOff>false</turnGravityOff>
+            <gravity>1</gravity>
+            <material>Gazebo/Grey</material>
+        </gazebo>
+
+
+        <gazebo reference="wheel">
+            <collision name="wheel_collision">
+                <surface>
+                    <friction>
+                        <torsional>
+                            <coefficient>1</coefficient>
+                            <use_patch_radius>true</use_patch_radius>
+                            <patch_radius>0.02</patch_radius>
+                        </torsional>
+                    </friction>
+                </surface>
+            </collision>
+            <mu1>1.0</mu1>
+            <mu2>1.0</mu2> 
+            <kp>1e+13</kp>
+            <kd>1.0</kd>
+            <maxVel>0.001</maxVel>
+            <minDepth>0.00000000001</minDepth>
+            <turnGravityOff>false</turnGravityOff>
+            <gravity>1</gravity>
+            <material>Gazebo/White</material>
+        </gazebo>
+
+    </xacro:macro>
+  
+</robot>

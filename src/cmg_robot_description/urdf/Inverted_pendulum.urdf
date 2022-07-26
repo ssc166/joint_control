@@ -1,0 +1,675 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
+     Commit Version: 1.6.0-4-g7f85cfe  Build Version: 1.6.7995.38578
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot
+  name="wheeled_inverted_pendulum">
+  <link
+    name="cmg_link">
+    <inertial>
+      <origin
+        xyz="0.0025631 1.1523E-05 1.0493"
+        rpy="0 0 0" />
+      <mass
+        value="0.87703" />
+      <inertia
+        ixx="0.0030285"
+        ixy="-2.6681E-08"
+        ixz="1.9895E-06"
+        iyy="0.0023124"
+        iyz="-8.0686E-08"
+        izz="0.0040816" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://cmg_robot_description/meshes/cmg_link.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.75294 0.75294 0.75294 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://cmg_robot_description/meshes/cmg_link.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+  <link
+    name="right_gimbal_link">
+    <inertial>
+      <origin
+        xyz="7.5544E-18 2.0817E-15 -0.08"
+        rpy="0 0 0" />
+      <mass
+        value="0.10901" />
+      <inertia
+        ixx="0.00038161"
+        ixy="5.6624E-20"
+        ixz="-3.8405E-19"
+        iyy="0.00035801"
+        iyz="7.4731E-18"
+        izz="6.7406E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://cmg_robot_description/meshes/right_gimbal_link.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.75294 0.75294 0.75294 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://cmg_robot_description/meshes/right_gimbal_link.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="right_gimbal_joint"
+    type="revolute">
+    <origin
+      xyz="0 -1.1334 -0.08"
+      rpy="1.5708 0 0" />
+    <parent
+      link="cmg_link" />
+    <child
+      link="right_gimbal_link" />
+    <axis
+      xyz="0 0 0" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="right_flywheel_link">
+    <inertial>
+      <origin
+        xyz="1.6599E-18 0 2.2204E-16"
+        rpy="0 0 0" />
+      <mass
+        value="0.52779" />
+      <inertia
+        ixx="0.00078508"
+        ixy="-7.1944E-24"
+        ixz="1.4427E-25"
+        iyy="0.001491"
+        iyz="1.8268E-17"
+        izz="0.00078508" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://cmg_robot_description/meshes/right_flywheel_link.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.75294 0.75294 0.75294 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://cmg_robot_description/meshes/right_flywheel_link.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="right_flywheel_joint"
+    type="continuous">
+    <origin
+      xyz="0 0 -0.08"
+      rpy="0 0 0" />
+    <parent
+      link="right_gimbal_link" />
+    <child
+      link="right_flywheel_link" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="left_gimbal_link">
+    <inertial>
+      <origin
+        xyz="-1.3085E-18 2.0817E-15 -0.08"
+        rpy="0 0 0" />
+      <mass
+        value="0.10901" />
+      <inertia
+        ixx="0.00038161"
+        ixy="4.538E-20"
+        ixz="-3.2977E-19"
+        iyy="0.00035801"
+        iyz="7.5383E-18"
+        izz="6.7406E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://cmg_robot_description/meshes/left_gimbal_link.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.75294 0.75294 0.75294 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://cmg_robot_description/meshes/left_gimbal_link.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="left_gimbal_joint"
+    type="revolute">
+    <origin
+      xyz="0 -1.1334 0.08"
+      rpy="1.5708 0 0" />
+    <parent
+      link="cmg_link" />
+    <child
+      link="left_gimbal_link" />
+    <axis
+      xyz="0 0 0" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="left_flywheel_link">
+    <inertial>
+      <origin
+        xyz="1.6539E-18 1.3878E-17 0"
+        rpy="0 0 0" />
+      <mass
+        value="0.52779" />
+      <inertia
+        ixx="0.00078508"
+        ixy="-7.1049E-19"
+        ixz="1.2973E-25"
+        iyy="0.001491"
+        iyz="1.8268E-17"
+        izz="0.00078508" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://cmg_robot_description/meshes/left_flywheel_link.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.75294 0.75294 0.75294 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://cmg_robot_description/meshes/left_flywheel_link.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="left_flywheel_joint"
+    type="continuous">
+    <origin
+      xyz="0 0 -0.08"
+      rpy="0 0 0" />
+    <parent
+      link="left_gimbal_link" />
+    <child
+      link="left_flywheel_link" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="hip_link">
+    <inertial>
+      <origin
+        xyz="0.055136 -0.0092612 -0.030425"
+        rpy="0 0 0" />
+      <mass
+        value="0.57446" />
+      <inertia
+        ixx="0.00035258"
+        ixy="-2.3527E-07"
+        ixz="-2.793E-07"
+        iyy="0.00031359"
+        iyz="1.7337E-05"
+        izz="0.00032643" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://cmg_robot_description/meshes/hip_link.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.63922 0.63922 0.68627 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://cmg_robot_description/meshes/hip_link.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="hip_joint"
+    type="revolute">
+    <origin
+      xyz="0.069045 -0.81144 0.036373"
+      rpy="0.6095 0 -3.1416" />
+    <parent
+      link="cmg_link" />
+    <child
+      link="hip_link" />
+    <axis
+      xyz="0 0 0" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="hip_to_knee_link">
+    <inertial>
+      <origin
+        xyz="0.023173 0.059963 0.14958"
+        rpy="0 0 0" />
+      <mass
+        value="0.66754" />
+      <inertia
+        ixx="0.0014323"
+        ixy="1.7203E-07"
+        ixz="-3.9009E-06"
+        iyy="0.0015067"
+        iyz="-1.4622E-06"
+        izz="0.00045892" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://cmg_robot_description/meshes/hip_to_knee_link.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.75294 0.75294 0.75294 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://cmg_robot_description/meshes/hip_to_knee_link.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="hip_to_knee_joint"
+    type="revolute">
+    <origin
+      xyz="0.069 0.034465 0.01268"
+      rpy="-0.96129 0 3.1416" />
+    <parent
+      link="hip_link" />
+    <child
+      link="hip_to_knee_link" />
+    <axis
+      xyz="0 0 0" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="knee_ankle_pitch_link">
+    <inertial>
+      <origin
+        xyz="0.015126 -0.060992 0.10016"
+        rpy="0 0 0" />
+      <mass
+        value="0.55653" />
+      <inertia
+        ixx="0.00081117"
+        ixy="-4.9761E-07"
+        ixz="2.7151E-05"
+        iyy="0.00085587"
+        iyz="7.1656E-07"
+        izz="0.0003606" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://cmg_robot_description/meshes/knee_ankle_pitch_link.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.75294 0.75294 0.75294 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://cmg_robot_description/meshes/knee_ankle_pitch_link.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="knee_ankle_pitch_joint"
+    type="revolute">
+    <origin
+      xyz="0 0.1255 0.28"
+      rpy="0 0 0" />
+    <parent
+      link="hip_to_knee_link" />
+    <child
+      link="knee_ankle_pitch_link" />
+    <axis
+      xyz="0 0 0" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="ankle_roll_link">
+    <inertial>
+      <origin
+        xyz="0.014548 -0.005687 -0.0068274"
+        rpy="0 0 0" />
+      <mass
+        value="0.47693" />
+      <inertia
+        ixx="0.00025647"
+        ixy="-3.9374E-07"
+        ixz="-3.9108E-08"
+        iyy="0.0002565"
+        iyz="7.4861E-08"
+        izz="0.00022539" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://cmg_robot_description/meshes/ankle_roll_link.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.75294 0.75294 0.75294 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://cmg_robot_description/meshes/ankle_roll_link.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="ankle_roll_joint"
+    type="revolute">
+    <origin
+      xyz="-4.5069E-05 -0.059 0.27994"
+      rpy="0 0 0" />
+    <parent
+      link="knee_ankle_pitch_link" />
+    <child
+      link="ankle_roll_link" />
+    <axis
+      xyz="0 0 0" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="ankle_yaw_link">
+    <inertial>
+      <origin
+        xyz="-0.087885 -7.8167E-05 0.093558"
+        rpy="0 0 0" />
+      <mass
+        value="0.3259" />
+      <inertia
+        ixx="0.00016896"
+        ixy="9.2056E-08"
+        ixz="2.2541E-06"
+        iyy="0.00021012"
+        iyz="1.2708E-13"
+        izz="0.00020666" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://cmg_robot_description/meshes/ankle_yaw_link.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.75294 0.75294 0.75294 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://cmg_robot_description/meshes/ankle_yaw_link.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="ankle_yaw_joint"
+    type="revolute">
+    <origin
+      xyz="0.0825 0 0"
+      rpy="0 0 0" />
+    <parent
+      link="ankle_roll_link" />
+    <child
+      link="ankle_yaw_link" />
+    <axis
+      xyz="0 0 0" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="ankle_to_wheel_link">
+    <inertial>
+      <origin
+        xyz="1.742E-13 0.014242 7.8661E-18"
+        rpy="0 0 0" />
+      <mass
+        value="0.10784" />
+      <inertia
+        ixx="0.0001838"
+        ixy="3.4599E-16"
+        ixz="2.8535E-21"
+        iyy="0.00020739"
+        iyz="-1.8561E-20"
+        izz="0.0003502" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://cmg_robot_description/meshes/ankle_to_wheel_link.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.75294 0.75294 0.75294 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://cmg_robot_description/meshes/ankle_to_wheel_link.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="ankle_to_wheel_link"
+    type="revolute">
+    <origin
+      xyz="-0.0825 0 0.2325"
+      rpy="-1.5708 0 1.5708" />
+    <parent
+      link="ankle_yaw_link" />
+    <child
+      link="ankle_to_wheel_link" />
+    <axis
+      xyz="0 0 0" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="wheel_link">
+    <inertial>
+      <origin
+        xyz="1.7655E-17 4.394E-18 -1.8757E-18"
+        rpy="0 0 0" />
+      <mass
+        value="0.99712" />
+      <inertia
+        ixx="0.0032469"
+        ixy="6.0305E-19"
+        ixz="5.5508E-36"
+        iyy="0.0018065"
+        iyz="1.2749E-35"
+        izz="0.0018065" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://cmg_robot_description/meshes/wheel_link.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.75294 0.75294 0.75294 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://cmg_robot_description/meshes/wheel_link.STL" scale="0.001 0.001 0.001" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="wheel_joint"
+    type="revolute">
+    <origin
+      xyz="0 -0.04 0"
+      rpy="1.5708 0 3.1416" />
+    <parent
+      link="ankle_to_wheel_link" />
+    <child
+      link="wheel_link" />
+    <axis
+      xyz="0 0 0" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+</robot>

@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- <xacro:macro name="steering" params="">
+	<gazebo>
+	    <plugin name="steering" filename="libgazebo_ros_planar_move.so">
+	      <commandTopic>cmd_vel</commandTopic>
+	      <odometryTopic>odom</odometryTopic>
+	      <odometryFrame>odom</odometryFrame>
+	      <odometryRate>50.0</odometryRate>
+	      <robotBaseFrame>base</robotBaseFrame>
+	      <publishTF>false</publishTF>
+	    </plugin>
+		<material>Gazebo/DarkGrey</material>
+	</gazebo>
+  </xacro:macro> -->
+  
+  <!-- Gazebo Reference macro -->
+  <xacro:macro name="RefLink" params="ref">
+    <gazebo reference="${ref}">
+      <kp>1000000.0</kp>
+      <kd>100.0</kd>
+      <mu1>1.0</mu1>
+      <mu2>1.0</mu2>
+      <maxVel>0.0</maxVel>
+      <minDepth>0.0001</minDepth>
+      <material>Gazebo/DarkGrey</material>
+      <garvity>1</garvity>
+    </gazebo>
+  </xacro:macro>
+
+  <!-- World -->
+  <gazebo reference="world"/>
+  
+  <!-- body -->
+  <RefLink ref="body"/>
+
+  <!-- wheel -->
+  <RefLink ref="wheel"/>
+
+  <!-- frame -->
+  <RefLink ref="frame"/>
+
+  <!-- Left_gimbal -->
+  <RefLink ref="Left_gimbal"/>
+
+  <!-- Left_flywheel -->
+  <RefLink ref="Left_flywheel"/>
+
+  <!-- Right_gimbal -->
+  <RefLink ref="Right_gimbal"/>
+
+  <!-- Right_flywheel -->
+  <RefLink ref="Right_flywheel"/>
+
+  <!-- ros_control plugin -->
+  <gazebo>
+    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+      <controlPeriod>0.001</controlPeriod>
+      <robotNamespace>/wheeled_inverted_pendulum</robotNamespace>
+      <!-- <jointName>wheel_joint, Left_gimbal_joint, Right_gimbal_joint </jointName> -->
+      <robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
+      <legacyModeNS>true</legacyModeNS>
+    </plugin>
+  </gazebo>
+
+  
+
+
+</robot>
