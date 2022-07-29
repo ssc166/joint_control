@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(cmg_robot_description)
+project(cmg_leg_description)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)

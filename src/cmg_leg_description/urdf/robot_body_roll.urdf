@@ -15,7 +15,7 @@
             <visual>
                 <origin xyz="0 0 0" rpy="1.5708 0.0 0"/> <!--xyz="0.0 0.0 0.0" rpy="0 0.0 0" -->
                 <geometry>
-                    <mesh filename="package://cmg_robot_description/meshes/cmg_link.STL" scale="0.001 0.001 0.001"/>         
+                    <mesh filename="package://cmg_leg_description/meshes/cmg_link.STL" scale="0.001 0.001 0.001"/>         
                 </geometry>
                 <material name=""/>
             </visual>
@@ -23,7 +23,7 @@
             <collision>
                 <origin xyz="0 0 0" rpy="1.5708 0.0 0.0"/>
                 <geometry>
-                    <mesh filename="package://cmg_robot_description/meshes/cmg_link.STL" scale="0.001 0.001 0.001"/>
+                    <mesh filename="package://cmg_leg_description/meshes/cmg_link.STL" scale="0.001 0.001 0.001"/>
                 </geometry>
             </collision>
 
@@ -55,14 +55,14 @@
             <visual>
                 <origin xyz="0.0 0.0 0.0" rpy="0 0.0 0"/> 
                 <geometry>
-                    <mesh filename="package://cmg_robot_description/meshes/left_gimbal_link.STL" scale="0.001 0.001 0.001"/>         
+                    <mesh filename="package://cmg_leg_description/meshes/left_gimbal_link.STL" scale="0.001 0.001 0.001"/>         
                 </geometry>
                 <material name=""/>
             </visual>
             <collision>
                 <origin xyz="0 0 0" rpy="0 0.0 0.0"/>
                 <geometry>
-                    <mesh filename="package://cmg_robot_description/meshes/left_gimbal_link.STL" scale="0.001 0.001 0.001"/>        
+                    <mesh filename="package://cmg_leg_description/meshes/left_gimbal_link.STL" scale="0.001 0.001 0.001"/>        
                 </geometry>
             </collision>
             <inertial>
@@ -90,14 +90,14 @@
             <visual>
                 <origin xyz="0 0 0" rpy="0 0 0" />
                 <geometry>
-                    <mesh filename="package://cmg_robot_description/meshes/left_flywheel_link.STL" scale="0.001 0.001 0.001" />
+                    <mesh filename="package://cmg_leg_description/meshes/left_flywheel_link.STL" scale="0.001 0.001 0.001" />
                 </geometry>
                 <material name=""/>
             </visual>
 
             <collision>
                 <geometry>
-                    <mesh filename="package://cmg_robot_description/meshes/left_flywheel_link.STL" scale="0.001 0.001 0.001" />
+                    <mesh filename="package://cmg_leg_description/meshes/left_flywheel_link.STL" scale="0.001 0.001 0.001" />
                 </geometry>
             </collision>
 
@@ -125,14 +125,14 @@
             <visual>
                 <origin xyz="0.0 0.0 0.0" rpy="0 0.0 3.14"/> 
                 <geometry>
-                    <mesh filename="package://cmg_robot_description/meshes/right_gimbal_link.STL" scale="0.001 0.001 0.001"/>         
+                    <mesh filename="package://cmg_leg_description/meshes/right_gimbal_link.STL" scale="0.001 0.001 0.001"/>         
                 </geometry>
                 <material name=""/>
             </visual>
             <collision>
                 <origin xyz="0 0 0" rpy="0 0.0 3.14"/>
                 <geometry>
-                    <mesh filename="package://cmg_robot_description/meshes/right_gimbal_link.STL" scale="0.001 0.001 0.001"/>        
+                    <mesh filename="package://cmg_leg_description/meshes/right_gimbal_link.STL" scale="0.001 0.001 0.001"/>        
                 </geometry>
             </collision>
             <inertial>
@@ -160,7 +160,7 @@
             <visual>
                 <origin xyz="0 0 0" rpy="3.14 0 0" />
                 <geometry>
-                    <mesh filename="package://cmg_robot_description/meshes/right_flywheel_link.STL" scale="0.001 0.001 0.001" />
+                    <mesh filename="package://cmg_leg_description/meshes/right_flywheel_link.STL" scale="0.001 0.001 0.001" />
                 </geometry>
                 <material name=""/>
             </visual>
@@ -168,7 +168,7 @@
             <collision>
                 <origin xyz="0 0 0" rpy="3.14 0 0" />
                 <geometry>
-                    <mesh filename="package://cmg_robot_description/meshes/right_flywheel_link.STL" scale="0.001 0.001 0.001" />
+                    <mesh filename="package://cmg_leg_description/meshes/right_flywheel_link.STL" scale="0.001 0.001 0.001" />
                 </geometry>
             </collision>
 
@@ -194,7 +194,7 @@
             <visual>
                 <origin xyz="-0.042455 0 0" rpy="3.14 0 0"/> 
                 <geometry>
-                    <mesh filename="package://cmg_robot_description/meshes/hip_link.STL" scale="0.001 0.001 0.001"/>         
+                    <mesh filename="package://cmg_leg_description/meshes/hip_link.STL" scale="0.001 0.001 0.001"/>         
                 </geometry>
                 <material name=""/>
             </visual>
@@ -203,7 +203,7 @@
                 <origin xyz="-0.042455 0 0" rpy="3.14 0 0"/>
                 <geometry>
                     <!-- <box size = "  0.127 0.168778 0.958442 "/>                     -->
-                    <mesh filename="package://cmg_robot_description/meshes/hip_link.STL" scale="0.001 0.001 0.001"/>
+                    <mesh filename="package://cmg_leg_description/meshes/hip_link.STL" scale="0.001 0.001 0.001"/>
                 </geometry>
             </collision>
 
@@ -218,12 +218,12 @@
 
         <joint name="hip_pitch_joint" type="revolute">
 		    <!-- <origin xyz="0 -0.0045 -0.451221" rpy="0.0 0.0 0.0" />  -->
-		    <origin xyz="0 0 0" rpy="0.0 0 0.0" />
+		    <origin xyz="0 0 0" rpy="0.0 -0.8744 0.0" />
             <!-- -0.8  -->
             <axis xyz="0 1 0"/>
 		    <parent link="hip_link"/>
 		    <child link="hip_to_knee_link" />
-            <limit effort="100" velocity="1000" upper="0" lower="0"/>
+            <limit effort="1000" velocity="1000" upper="2.5" lower="0.1"/>
             <joint_properties damping="1.0" friction="1.0"/>
 		</joint> 
 
@@ -231,7 +231,7 @@
             <visual>
                 <origin xyz="0.0 0.0665 0" rpy="3.14 0 0"/> 
                 <geometry>
-                    <mesh filename="package://cmg_robot_description/meshes/hip_to_knee_link.STL" scale="0.001 0.001 0.001"/>         
+                    <mesh filename="package://cmg_leg_description/meshes/hip_to_knee_link.STL" scale="0.001 0.001 0.001"/>         
                 </geometry>
                 <material name=""/>
                     
@@ -241,79 +241,79 @@
                 <origin xyz="0 0.0665 0.0" rpy="3.14 0 0"/>
                 <geometry>
                     <!-- <box size = "  0.127 0.168778 0.958442 "/>                     -->
-                    <mesh filename="package://cmg_robot_description/meshes/hip_to_knee_link.STL" scale="0.001 0.001 0.001"/>
+                    <mesh filename="package://cmg_leg_description/meshes/hip_to_knee_link.STL" scale="0.001 0.001 0.001"/>
                 </geometry>
             </collision>
 
             <inertial>
                 <mass value="1.739" /> 
-                <origin xyz="0.0 0 -0.14958" rpy="3.14 0.0 0"/>
+                <origin xyz="0.0 0 -0.14958" rpy="3.14 0 0"/>
                 <inertia ixx="0.008595913" ixy="0.000104152"  ixz="0.000298503"  iyy="0.007917693"  iyz="-0.000246913" izz="0.002944951" />
             </inertial>
         </link> 
 <!-- ######################################################################################### -->
 
         <joint name="knee_joint" type="revolute">
-		    <origin xyz="0 0 -0.28" rpy="0.0 0 0.0" /> 
+		    <origin xyz="0 0 -0.28" rpy="0.0 1.6321 0.0" /> 
             <!-- 1.5 -->
             <axis xyz="0 1 0"/>
 		    <parent link="hip_to_knee_link"/>
 		    <child link="knee_ankle_link" />
-            <limit effort="100" velocity="1000" upper="0" lower="0"/>
+            <limit effort="1000" velocity="1000" upper="-0.1" lower="-3.0"/>
             <joint_properties damping="1.0" friction="1.0"/>
 		</joint> 
 
         <link name="knee_ankle_link">
             <visual>
-                <origin xyz="0.000045 -0.059 0" rpy="3.14 0 0"/> 
+                <origin xyz="0.000045 -0.059 0" rpy="3.14 -0 0"/> 
                 <geometry>
-                    <mesh filename="package://cmg_robot_description/meshes/knee_to_ankle_pitch_link.STL" scale="0.001 0.001 0.001"/>         
+                    <mesh filename="package://cmg_leg_description/meshes/knee_to_ankle_pitch_link.STL" scale="0.001 0.001 0.001"/>         
                 </geometry>
                 <material name=""/>
                     
             </visual>
 
             <collision>
-                <origin xyz="0.000045 -0.059 0" rpy="3.14 0 0"/>
+                <origin xyz="0.000045 -0.059 0" rpy="3.14 -0 0"/>
                 <geometry>
                     <!-- <box size = "  0.127 0.168778 0.958442 "/>                     -->
-                    <mesh filename="package://cmg_robot_description/meshes/knee_to_ankle_pitch_link.STL" scale="0.001 0.001 0.001"/>
+                    <mesh filename="package://cmg_leg_description/meshes/knee_to_ankle_pitch_link.STL" scale="0.001 0.001 0.001"/>
                 </geometry>
             </collision>
 
             <inertial>
                 <mass value="1.416" /> 
-                <origin xyz="0.0 0 -0.12016" rpy="3.14 0.0 0"/>
+                <origin xyz="0.0 0 -0.12016" rpy="3.14 -0 0"/>
                 <inertia ixx="0.010192583" ixy="0.000128782"  ixz="0.000780769"  iyy="0.009599672"  iyz="-0.000476197" izz="0.002390603" />
             </inertial>
         </link> 
 <!-- ######################################################################################### -->
 
         <joint name="ankle_pitch_joint" type="revolute">
-		    <origin xyz="0 0 -0.279942" rpy="0.0 0.0 0.0" /> 
+		    <origin xyz="0 0 -0.279942" rpy="0.0 -0.7577 0.0" /> 
             <!-- -0.7 -->
             <axis xyz="0 1 0"/>
 		    <parent link="knee_ankle_link"/>
 		    <child link="ankle_link" />
-            <limit effort="100" velocity="1000" upper="0" lower="0"/>
+            <limit effort="1000" velocity="1000" upper="2.5" lower="0.1"/>
             <joint_properties damping="1.0" friction="1.0"/>
 		</joint> 
 
         <link name="ankle_link">
             <visual>
-                <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/> 
+                <origin xyz="0.0 0.0 0.0" rpy="0 0.0 0"/> 
                 <geometry>
-                    <mesh filename="package://cmg_robot_description/meshes/ankle_link.STL" scale="0.001 0.001 0.001"/>         
+                    <mesh filename="package://cmg_leg_description/meshes/ankle_link.STL" scale="0.001 0.001 0.001"/>         
                 </geometry>
                 <material name=""/>
                     
             </visual>
 
             <collision>
-                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <origin xyz="0 0 0" rpy="0 0.0 0"/>
                 <geometry>
                     <!-- <box size = "  0.127 0.168778 0.958442 "/>                     -->
-                    <mesh filename="package://cmg_robot_description/meshes/ankle_link.STL" scale="0.001 0.001 0.001"/>
+                    <mesh filename="package://cmg_leg_description/meshes/ankle_link.STL" scale="0.001 0.001 0.001"/>
                 </geometry>
             </collision>
 
@@ -341,7 +341,7 @@
             <visual>
                 <origin xyz="0.0 0.0 -0.0" rpy="0 0.0 0"/> 
                 <geometry>
-                    <mesh filename="package://cmg_robot_description/meshes/wheel_link.STL" scale="0.001 0.001 0.001"/>         
+                    <mesh filename="package://cmg_leg_description/meshes/wheel_link.STL" scale="0.001 0.001 0.001"/>         
                 </geometry>
                 <material name=""/>
             </visual>
@@ -349,7 +349,7 @@
             <collision>                
                 <origin xyz="0 0 -0.0" rpy="0 0.0 0"/>
                 <geometry>
-                    <mesh filename="package://cmg_robot_description/meshes/wheel_link.STL" scale="0.001 0.001 0.001"/>                 
+                    <mesh filename="package://cmg_leg_description/meshes/wheel_link.STL" scale="0.001 0.001 0.001"/>                 
                 </geometry>
             </collision>
 
@@ -574,22 +574,22 @@
         <transmission name="hip_pitch_trans">
             <type>transmission_interface/SimpleTransmission</type>
             <joint name="hip_pitch_joint" >
-                <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+                <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
             </joint>
             <actuator name="hip_pitch_motor">
-                <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+                <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
                 <mechanicalReduction>1</mechanicalReduction>
             </actuator>
         </transmission>
 
 
-        <!-- <transmission name="knee_trans">
+        <transmission name="knee_trans">
             <type>transmission_interface/SimpleTransmission</type>
             <joint name="knee_joint" >
-                <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+                <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
             </joint>
             <actuator name="knee_motor">
-                <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+                <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
                 <mechanicalReduction>1</mechanicalReduction>
             </actuator>
         </transmission>
@@ -597,13 +597,13 @@
         <transmission name="ankle_pitch_trans">
             <type>transmission_interface/SimpleTransmission</type>
             <joint name="ankle_pitch_joint" >
-                <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+                <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
             </joint>
             <actuator name="ankle_pitch_motor">
-                <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+                <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
                 <mechanicalReduction>1</mechanicalReduction>
             </actuator>
-        </transmission> -->
+        </transmission>
 
         <!-- <transmission name="ankle_roll_trans">
             <type>transmission_interface/SimpleTransmission</type>

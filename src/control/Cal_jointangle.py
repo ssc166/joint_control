@@ -61,6 +61,7 @@ if __name__ == '__main__':
             thetalistd.data = [q1, q2, q3,q4]
             pub_joint.publish(thetalistd)
             theta = np.array([q1, q2, q3,q4])
+            print(theta)
             print(theta*RAD2DEG)
             print(t2-t1)
         

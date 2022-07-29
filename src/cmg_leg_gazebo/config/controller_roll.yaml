@@ -16,10 +16,8 @@ wheeled_inverted_pendulum:
 
       # hip_roll_joint:       {p: 1500, i: 15, d: 50}
       hip_pitch_joint:      {p: 200, i: 15, d: 0.5}
-      # knee_joint:           {p: 200, i: 15, d: 0.5}
-      # ankle_pitch_joint:    {p: 200, i: 15, d: 0.5}
-      # ankle_roll_joint:     {p: 1500, i: 15, d: 50}
-      # ankle_yaw_joint:      {p: 1500, i: 10, d: 50}
+      knee_joint:           {p: 200, i: 15, d: 0.5}
+      ankle_pitch_joint:    {p: 200, i: 15, d: 0.5}
 
 
   # hip_roll:
@@ -27,16 +25,16 @@ wheeled_inverted_pendulum:
   #   joint: hip_roll_joint
   
   hip_pitch:
-    type: position_controllers/JointPositionController
+    type: effort_controllers/JointEffortController
     joint: hip_pitch_joint
   
-  # knee:
-  #   type: position_controllers/JointPositionController
-  #   joint: knee_joint
+  knee:
+    type: effort_controllers/JointEffortController
+    joint: knee_joint
 
-  # ankle_pitch:
-  #   type: position_controllers/JointPositionController
-  #   joint: ankle_pitch_joint
+  ankle_pitch:
+    type: effort_controllers/JointEffortController
+    joint: ankle_pitch_joint
 
   # ankle_roll:
   #   type: position_controllers/JointPositionController
@@ -50,12 +48,12 @@ wheeled_inverted_pendulum:
   # left_gimbal:
   #   type: effort_controllers/JointEffortController
   #   joint: Left_gimbal_joint
-    # pid: {p: 0.5, i: 0, d: 0}
+  #   pid: {p: 0.5, i: 0, d: 0}
 
   left_flywheel:
     type: velocity_controllers/JointVelocityController
     joint: Left_flywheel_joint
-    # pid: {p: 10.0, i: 0, d: 1.0}
+    pid: {p: 10.0, i: 0, d: 1.0}
 
   right_gimbal:
     type: effort_controllers/JointEffortController
@@ -65,7 +63,7 @@ wheeled_inverted_pendulum:
   right_flywheel:
     type: velocity_controllers/JointVelocityController
     joint: Right_flywheel_joint
-    # pid: {p: 10.0, i: 0, d: 1.0}
+    pid: {p: 10.0, i: 0, d: 1.0}
 
   wheel:
     type: effort_controllers/JointEffortController
