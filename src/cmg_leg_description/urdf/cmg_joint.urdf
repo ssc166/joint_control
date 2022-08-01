@@ -5,13 +5,13 @@
         <link name="wheel">		    
 		</link>
 
-        <joint name="cmg_joint" type="continuous">
+        <joint name="cmg_joint" type="fixed">
 		    <origin xyz="0 0 0.069" rpy="0.0 0.0 0.0" /> 
 		    <parent link="wheel"/>
 		    <child link="wheel_link"/>
-            <axis xyz="0 1 0"/>
+            <!-- <axis xyz="0 1 0"/>
             <limit effort="100" velocity="1000"/>
-            <joint_properties damping="1.0" friction="1.0"/>
+            <joint_properties damping="1.0" friction="1.0"/> -->
 		</joint> 
 
          <link name="wheel_link">
@@ -41,11 +41,11 @@
 
         <joint name="wheel_joint" type="revolute">
 		    <!-- <origin xyz="0 -0.0045 -0.451221" rpy="0.0 0.0 0.0" />  -->
-		    <origin xyz="0 0 0.0" rpy="0.0 0.0 0.0" /> 
+		    <origin xyz="0 0 0.171" rpy="0.0 0.0 0.0" /> 
             <axis xyz="0 1 0"/>
 		    <parent link="wheel_link"/>
 		    <child link="ankle_link" />
-            <limit effort="100" velocity="1000" upper="2.5" lower="0.1"/>
+            <limit effort="100" velocity="1000" upper="0" lower="0.0"/>
             <joint_properties damping="1.0" friction="1.0"/>
 		</joint>
 
@@ -82,7 +82,7 @@
             <axis xyz="0 1 0"/>
 		    <parent link="ankle_link"/>
 		    <child link="knee_ankle_link" />
-            <limit effort="1000" velocity="1000" upper="2.5" lower="0.1"/>
+            <limit effort="1000" velocity="1000" upper="0" lower="0"/>
             <joint_properties damping="1.0" friction="1.0"/>
 		</joint> 
 
@@ -119,7 +119,7 @@
             <axis xyz="0 1 0"/>
 		    <parent link="knee_ankle_link"/>
 		    <child link="hip_to_knee_link" />
-            <limit effort="1000" velocity="1000" upper="-0.1" lower="-3.0"/>
+            <limit effort="1000" velocity="1000" upper="0" lower="0"/>
             <joint_properties damping="1.0" friction="1.0"/>
 		</joint>
 
@@ -157,7 +157,7 @@
             <axis xyz="0 1 0"/>
 		    <parent link="hip_to_knee_link"/>
 		    <child link="hip_link" />
-            <limit effort="1000" velocity="1000" upper="2.5" lower="0.1"/>
+            <limit effort="1000" velocity="1000" upper="0" lower="0.0"/>
             <joint_properties damping="1.0" friction="1.0"/>
 		</joint>
 

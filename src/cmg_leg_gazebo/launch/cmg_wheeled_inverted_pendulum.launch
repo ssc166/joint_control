@@ -18,7 +18,7 @@
   </include>
 
   <!-- Load the URDF into ROS parameter server -->
-  <param name="robot_description" textfile="$(find cmg_leg_description)/urdf/cmg_joint.urdf"/>
+  <param name="robot_description" textfile="$(find cmg_leg_description)/urdf/robot.urdf"/>
   <!-- <param name="robot_description" textfile="$(find cmg_leg_description)/urdf/robot.sdf"/> -->
 
   <!-- Run a python script to the send a service call to gazebo_ros to spawn a URDF robot -->

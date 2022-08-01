@@ -238,7 +238,7 @@ if __name__ == '__main__':
         pub_w = rospy.Publisher('/wheeled_inverted_pendulum/wheel/command', Float64, queue_size=100)
         rospy.Subscriber('CoM_Pitch', Float64MultiArray, callback)
         
-        rate = rospy.Rate(1000)
+        rate = rospy.Rate(100)
         gazebo_setting()
 
         

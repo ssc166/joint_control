@@ -10,15 +10,15 @@ import time
 def get_deg(h):
     m2 = 1.416
     m3 = 1.739
-    m4 = 3.25+12.5
+    m4 = 16.09
 
     L1 = 0.171
     L2 = 0.28
     L3 = 0.28
     L4 = 0.346
 
-    L2c = L2 *0.75
-    L3c = L3 / 2
+    L2c = L2 - 0.045289
+    L3c = L3 - 0.18878
 
     theta_3, q2 = sp.symbols('theta_3, q2')
     
@@ -29,7 +29,7 @@ def get_deg(h):
     f1 = sp.Eq(sp.cos(q2)+sp.sin(theta_3),float(A))
     f2 = sp.Eq(-float(B)*sp.sin(q2)+float(C)*sp.cos(theta_3),0)
     sol = sp.solve([f1,f2])
-    solu = sol[0]
+    solu = sol[1]
 
     q2 = solu[q2]
     theta_3 = solu[theta_3]
@@ -56,13 +56,19 @@ if __name__ == '__main__':
             t1 = time.time()
             q1, q2, q3, q4 = get_deg(float(height))
             t2 = time.time()
+            theta_1 = q1
+            theta_2 = q1 + q2
+            theta_3 = q1 + q2 + q3
+            theta_4 = q1 + q2 + q3 + q4
+            thetaa = np.array([theta_1, theta_2, theta_3, theta_4])
             
             thetalistd = Float64MultiArray()
             thetalistd.data = [q1, q2, q3,q4]
             pub_joint.publish(thetalistd)
             theta = np.array([q1, q2, q3,q4])
             print(theta)
-            print(theta*RAD2DEG)
+            print("q: ", theta*RAD2DEG)
+            print("theta: ", thetaa*RAD2DEG)
             print(t2-t1)
         
     except rospy.ROSInterruptException:

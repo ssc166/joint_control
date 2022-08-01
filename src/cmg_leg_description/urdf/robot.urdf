@@ -6,10 +6,11 @@
 		</link>
 
         <joint name="cmg_joint" type="fixed">
-		    <origin xyz="0 0 1.022142" rpy="0.0 0.0 0.0" /> 
+		    <origin xyz="0 0 0.8452" rpy="0.0 0.0 0.0" /> 
 		    <parent link="cmg"/>
 		    <child link="frame"/>
 		</joint> 
+        <!-- 1.022142 -->
 
         <link name="frame">
             <visual>
@@ -218,12 +219,12 @@
 
         <joint name="hip_pitch_joint" type="revolute">
 		    <!-- <origin xyz="0 -0.0045 -0.451221" rpy="0.0 0.0 0.0" />  -->
-		    <origin xyz="0 0 0" rpy="0.0 -0.8744 0.0" />
+		    <origin xyz="0 0 0" rpy="0.0 -0.885463 0.0" />
             <!-- -0.8  -->
             <axis xyz="0 1 0"/>
 		    <parent link="hip_link"/>
 		    <child link="hip_to_knee_link" />
-            <limit effort="1000" velocity="1000" upper="2.5" lower="0.1"/>
+            <limit effort="1000" velocity="1000" upper="0" lower="-1.57"/>
             <joint_properties damping="1.0" friction="1.0"/>
 		</joint> 
 
@@ -254,12 +255,12 @@
 <!-- ######################################################################################### -->
 
         <joint name="knee_joint" type="revolute">
-		    <origin xyz="0 0 -0.28" rpy="0.0 1.6321 0.0" /> 
+		    <origin xyz="0 0 -0.28" rpy="0.0 1.6307 0.0" /> 
             <!-- 1.5 -->
             <axis xyz="0 1 0"/>
 		    <parent link="hip_to_knee_link"/>
 		    <child link="knee_ankle_link" />
-            <limit effort="1000" velocity="1000" upper="-0.1" lower="-3.0"/>
+            <limit effort="1000" velocity="1000" upper="2.4" lower="0.0"/>
             <joint_properties damping="1.0" friction="1.0"/>
 		</joint> 
 
@@ -290,12 +291,12 @@
 <!-- ######################################################################################### -->
 
         <joint name="ankle_pitch_joint" type="revolute">
-		    <origin xyz="0 0 -0.279942" rpy="0.0 -0.7577 0.0" /> 
+		    <origin xyz="0 0 -0.279942" rpy="0.0 -0.755239 0.0" /> 
             <!-- -0.7 -->
             <axis xyz="0 1 0"/>
 		    <parent link="knee_ankle_link"/>
 		    <child link="ankle_link" />
-            <limit effort="1000" velocity="1000" upper="2.5" lower="0.1"/>
+            <limit effort="1000" velocity="1000" upper="0.0" lower="-1.5"/>
             <joint_properties damping="1.0" friction="1.0"/>
 		</joint> 
 
@@ -309,7 +310,7 @@
                     
             </visual>
 
-            <collision>
+            <collision> 
                 <origin xyz="0 0 0" rpy="0 0.0 0"/>
                 <geometry>
                     <!-- <box size = "  0.127 0.168778 0.958442 "/>                     -->
@@ -319,7 +320,7 @@
 
             <inertial>
                 <mass value="2.786" /> 
-                <origin xyz="0.0 0.0 0.227234" rpy="0 0.0 0"/>
+                <origin xyz="0.0 0.0 0.0" rpy="0 0.0 0"/>
                 <inertia ixx="0.006981371" ixy="0.000264258"  ixz="0.000196616"  iyy="0.007514491"  iyz="0.000229715" izz="0.005584527" />
             </inertial>
         </link> 
@@ -333,7 +334,7 @@
             <axis xyz="0 1 0"/>
 		    <parent link="ankle_link"/>
 		    <child link="wheel_link" />
-            <limit effort="100" velocity="1000"/>
+            <limit effort="1000" velocity="1000"/>
             <joint_properties damping="1.0" friction="1.0"/>
 		</joint>
 
@@ -432,7 +433,7 @@
             <maxVel>0.001</maxVel>
             <minDepth>0.00000000001</minDepth>
             <gravity>1</gravity>
-            <material>Gazebo/Grey</material>
+            <material>Gazebo/White</material>
         </gazebo>
 
         <gazebo reference="hip_to_knee_link">
@@ -443,7 +444,7 @@
             <maxVel>0.001</maxVel>
             <minDepth>0.00000000001</minDepth>
             <gravity>1</gravity>
-            <material>Gazebo/Grey</material>
+            <material>Gazebo/White</material>
         </gazebo>
 
         <gazebo reference="knee_ankle_link">
@@ -454,7 +455,7 @@
             <maxVel>0.001</maxVel>
             <minDepth>0.00000000001</minDepth>
             <gravity>1</gravity>
-            <material>Gazebo/Grey</material>
+            <material>Gazebo/White</material>
         </gazebo>
 
         <gazebo reference="ankle_link">
@@ -465,7 +466,7 @@
             <maxVel>0.001</maxVel>
             <minDepth>0.00000000001</minDepth>
             <gravity>1</gravity>
-            <material>Gazebo/Grey</material>
+            <material>Gazebo/White</material>
         </gazebo>
 
         <gazebo reference="wheel_link">
