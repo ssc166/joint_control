@@ -258,10 +258,12 @@ if __name__ == '__main__':
  
             wheel_ori_x, wheel_ori_y, wheel_ori_z = get_wheel_ori()
             wheel_vel_x, wheel_vel_y, wheel_vel_z = get_wheel_vel()
+            body_ori_x, body_ori_y, body_ori_z = get_body_ori()
+            body_vel_x, body_vel_y, body_vel_z = get_body_vel()
             
             theta_P = get_theta_P()
 
-            x0 = np.array([wheel_ori_y,theta_P,wheel_vel_y,body_vel_y])
+            x0 = np.array([wheel_ori_y,body_ori_y,wheel_vel_y,body_vel_y])
 
             u = -K @ ( x0 )
             pub_w.publish(u)

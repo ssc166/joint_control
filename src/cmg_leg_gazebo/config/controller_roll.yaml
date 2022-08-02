@@ -14,20 +14,20 @@ wheeled_inverted_pendulum:
       Right_gimbal_joint:   {p: 0.1, i: 0, d: 0}
       wheel_joint:          {p: 100.0, i: 16, d: 20}
 
-      hip_pitch_joint:      {p: 200, i: 15, d: 0.5}
-      knee_joint:           {p: 200, i: 15, d: 0.5}
-      ankle_pitch_joint:    {p: 200, i: 15, d: 0.5}
+      hip_pitch_joint:      {p: 200, i: 15, d: 100}
+      knee_joint:           {p: 200, i: 15, d: 100}
+      ankle_pitch_joint:    {p: 100, i: 15, d: 2}
   
   hip_pitch:
-    type: effort_controllers/JointEffortController
+    type: position_controllers/JointPositionController
     joint: hip_pitch_joint
   
   knee:
-    type: effort_controllers/JointEffortController
+    type: position_controllers/JointPositionController
     joint: knee_joint
 
   ankle_pitch:
-    type: effort_controllers/JointEffortController
+    type: position_controllers/JointPositionController
     joint: ankle_pitch_joint
 
   left_flywheel:

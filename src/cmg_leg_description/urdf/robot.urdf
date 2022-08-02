@@ -6,7 +6,7 @@
 		</link>
 
         <joint name="cmg_joint" type="fixed">
-		    <origin xyz="0 0 0.8452" rpy="0.0 0.0 0.0" /> 
+		    <origin xyz="0 0 1.022142" rpy="0.0 0.0 0.0" /> 
 		    <parent link="cmg"/>
 		    <child link="frame"/>
 		</joint> 
@@ -219,7 +219,7 @@
 
         <joint name="hip_pitch_joint" type="revolute">
 		    <!-- <origin xyz="0 -0.0045 -0.451221" rpy="0.0 0.0 0.0" />  -->
-		    <origin xyz="0 0 0" rpy="0.0 -0.885463 0.0" />
+		    <origin xyz="0 0 0" rpy="0.0 0 0.0" />
             <!-- -0.8  -->
             <axis xyz="0 1 0"/>
 		    <parent link="hip_link"/>
@@ -255,7 +255,7 @@
 <!-- ######################################################################################### -->
 
         <joint name="knee_joint" type="revolute">
-		    <origin xyz="0 0 -0.28" rpy="0.0 1.6307 0.0" /> 
+		    <origin xyz="0 0 -0.28" rpy="0.0 0 0.0" /> 
             <!-- 1.5 -->
             <axis xyz="0 1 0"/>
 		    <parent link="hip_to_knee_link"/>
@@ -291,7 +291,7 @@
 <!-- ######################################################################################### -->
 
         <joint name="ankle_pitch_joint" type="revolute">
-		    <origin xyz="0 0 -0.279942" rpy="0.0 -0.755239 0.0" /> 
+		    <origin xyz="0 0 -0.279942" rpy="0.0 0 0.0" /> 
             <!-- -0.7 -->
             <axis xyz="0 1 0"/>
 		    <parent link="knee_ankle_link"/>
@@ -575,10 +575,10 @@
         <transmission name="hip_pitch_trans">
             <type>transmission_interface/SimpleTransmission</type>
             <joint name="hip_pitch_joint" >
-                <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+                <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
             </joint>
             <actuator name="hip_pitch_motor">
-                <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+                <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
                 <mechanicalReduction>1</mechanicalReduction>
             </actuator>
         </transmission>
@@ -587,10 +587,10 @@
         <transmission name="knee_trans">
             <type>transmission_interface/SimpleTransmission</type>
             <joint name="knee_joint" >
-                <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+                <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
             </joint>
             <actuator name="knee_motor">
-                <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+                <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
                 <mechanicalReduction>1</mechanicalReduction>
             </actuator>
         </transmission>
@@ -598,10 +598,10 @@
         <transmission name="ankle_pitch_trans">
             <type>transmission_interface/SimpleTransmission</type>
             <joint name="ankle_pitch_joint" >
-                <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+                <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
             </joint>
             <actuator name="ankle_pitch_motor">
-                <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+                <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
                 <mechanicalReduction>1</mechanicalReduction>
             </actuator>
         </transmission>
