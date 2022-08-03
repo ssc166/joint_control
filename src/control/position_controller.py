@@ -10,6 +10,7 @@ import WIP_utils as utils
 import modern_robotics as mr
 import time
 import os
+import init_traj as it
 
 
 def gazebo_setting():
@@ -75,8 +76,76 @@ def get_cur_vel():
 
     dthetalist = np.array([L1_y, L2_y, L3_y, L4_y])
  
-    return dthetalist    
+    return dthetalist  
 
+def get_deg():
+
+    time, traj = utils.Trapezoidal_Traj_Gen_Given_Amax_and_T(1,2,0.03)
+    height_path = utils.Path_Gen(1.077, 0.9, traj[:,0])
+
+    m2 = 1.416
+    m3 = 1.739
+    m4 = 16.09
+
+    L1 = 0.171
+    L2 = 0.28
+    L3 = 0.28
+    L4 = 0.346
+
+    L2c = L2 - 0.045289
+    L3c = L3 - 0.18878
+
+    q1list = np.array([0])
+    q2list = np.array([0])
+    q3list = np.array([0])
+    q4list = np.array([0])
+
+    n = len(time)
+    for i in np.arange(0,n-1):
+
+        
+        A = (height_path[i]-L1-L4)/L2
+        B = m2*L2c + m3*L2+m4*L2
+        C = m3*L3c + m4*L3
+
+        theta_3, q2 = sp.symbols('theta_3, q2')
+        f1 = sp.Eq(sp.cos(q2)+sp.sin(theta_3),float(A))
+        f2 = sp.Eq(-float(B)*sp.sin(q2)+float(C)*sp.cos(theta_3),0)
+
+        sol = sp.solve([f1,f2])
+
+
+        if height_path[i] < 1.077:
+            solu = sol[1]
+        else:
+            solu = sol[0]
+        q2 = solu[q2]
+        theta_3 = solu[theta_3]        
+        q1 = np.pi/2
+        q3 = theta_3-q1-q2
+        q4 = -(q2+q3)
+
+        q1list = np.vstack((q1list,q1))
+        q2list= np.vstack((q2list,q2))
+        q3list= np.vstack((q3list,q3))
+        q4list= np.vstack((q4list,q4))
+
+
+    return q1list, q2list, q3list, q4list
+
+def init_pos():
+    # rospy.loginfo("Start Calculation")
+    q2, q3, q4 = it.joint_traj()
+    # rospy.loginfo("Calculate Joint Trajectory")
+    rate = rospy.Rate(1000)
+
+    for i in range(0,len(q2)-1):
+        pub_2.publish(q2[i])
+        pub_3.publish(q3[i])
+        pub_4.publish(q4[i])
+
+        rate.sleep()
+    rospy.loginfo("Complete Initialization")
 
 # def callback(data):
     
@@ -96,6 +165,7 @@ L2 = 0.28
 L3 = 0.280
 L4 = 0.346
 
+
 #######################################################################################################
 
 if __name__ == '__main__':
@@ -114,6 +184,8 @@ if __name__ == '__main__':
         q4d = -0.885463
 
         thetalistd = np.array([0, q2d, q3d, q4d])
+
+        init_pos()
         cur_time = time.time()    
         sec_time = time.time() 
 
@@ -134,9 +206,9 @@ if __name__ == '__main__':
             print("dt: ", dt)
             print('----------------------------------')
 
-            pub_2.publish(thetalistd[1])
-            pub_3.publish(thetalistd[2])
-            pub_4.publish(thetalistd[3])
+            # pub_2.publish(thetalistd[1])
+            # pub_3.publish(thetalistd[2])
+            # pub_4.publish(thetalistd[3])
             
             
             rate.sleep()
