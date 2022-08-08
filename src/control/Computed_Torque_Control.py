@@ -175,11 +175,11 @@ if __name__ == '__main__':
         pub_2 = rospy.Publisher('/wheeled_inverted_pendulum/ankle_pitch/command', Float64, queue_size=100)
         pub_3 = rospy.Publisher('/wheeled_inverted_pendulum/knee/command', Float64, queue_size=100)
         pub_4 = rospy.Publisher('/wheeled_inverted_pendulum/hip_pitch/command', Float64, queue_size=100)
-        rate = rospy.Rate(10000)
+        rate = rospy.Rate(1000)
         gazebo_setting()
         RAD2DEG = 180/np.pi
 
-        ddt = 0.03
+        ddt = 0.017
 
         q1d = 0
         q2d = 0.745239

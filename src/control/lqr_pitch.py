@@ -17,6 +17,8 @@ from numpy.linalg import matrix_rank, eig
 import matplotlib.pyplot as plt
 import state_equation_pitch as sep
 import WIP_utils as utils
+import init_traj as it
+
 
 def gazebo_setting():
     os.system('rosservice call /gazebo/set_physics_properties "{time_step: 0.001, max_update_rate: 1000.0, gravity: {x: 0.0, y: 0.0, z: -9.8}, ode_config: {auto_disable_bodies: False, sor_pgs_precon_iters: 0, sor_pgs_iters: 200, sor_pgs_w: 1.0, sor_pgs_rms_error_tol: 0.0, contact_surface_layer: 0.001, contact_max_correcting_vel: 100.0, cfm: 0.0, erp: 0.2, max_contacts: 20}}"')
@@ -164,11 +166,11 @@ def get_theta_P():
     
     return theta_P
 
-def callback(data):
-    global z_com
+# def callback(data):
+#     global z_com
     
-    CoMlist = data.data
-    z_com = CoMlist[0]
+#     CoMlist = data.data
+#     z_com = CoMlist[0]
 
     
 
@@ -186,8 +188,93 @@ def print_graph():
 
     plt.show()
     
+def get_l_com(q1, q2, q3, q4):
+    m1 = 2.486
+    m2 = 1.416
+    m3 = 1.739
+    m4 = 16.09
+
+    L1 = 0.171
+    L2 = 0.28
+    L3 = 0.28
+    L4 = 0.346
+    
+    L1c = L1
+    L2c = L2 - 0.045289
+    L3c = L3 - 0.18878
+    L4c = L4/2
+    
+    zlist = np.array([0])
+    for i in range(0, len(q1)-1):
+
+        theta_1 = q1[i]
+        theta_2 = q1[i] + q2[i]
+        theta_3 = q1[i] + q2[i] + q3[i]
+        theta_4 = q1[i] + q2[i] + q3[i] + q4[i]
+        
+        z_1c = L1c * np.sin(float(theta_1))
+        z_2c = L1 * np.sin(float(theta_1)) + L2c * np.sin(float(theta_2))
+        z_3c = L1 * np.sin(float(theta_1)) + L2 * np.sin(float(theta_2)) + L3c*np.sin(float(theta_3))
+        z_4c = L1 * np.sin(float(theta_1)) + L2 * np.sin(float(theta_2)) + L3 * np.sin(float(theta_3)) + L4c * np.sin(float(theta_4))
+
+        z_com = (m1*z_1c + m2*z_2c + m3*z_3c + m4*z_4c) / (m1 + m2 + m3 + m4)
+        
+        zlist = np.vstack((zlist, z_com))
+        
+    return zlist
+
+def init_ss():
+    q1, q2, q3, q4 = it.joint_traj()
+    zlist = get_l_com(q1, q2, q3, q4)
+    
+    Alist = np.array([0])
+    Blist = np.array([0])
+    Clist = np.array([0])
+    Dlist = np.array([0])
+    
+    for i in range(0, len(zlist) -1):
+        A, B, C, D = sep.Cal_Pitch_SS(zlist[i])
+        Alist = np.vstack((Alist, A))
+        Blist = np.vstack((Blist, B))
+        Clist = np.vstack((Clist, C))
+        Dlist = np.vstack((Dlist, D))
+        
+    return Alist, Blist, Clist, Dlist
+
+def init_lqr():
+    Alist, Blist, Clist, Dlist = init_ss()
+    
+    Q = sp.Matrix([ [0.3,    0,    0,    0],
+                [0,    0.01,    0,    0],
+                [0,    0,    0.1,    0],
+                [0,    0,    0,    0.01]])
+
+    R = sp.Matrix([ [1] ])
+    Klist = np.array([0])
+    
+    for i in range(0, len(Alist)-1):
+        K = control.lqr(Alist[i], Blist[i], Q, R)
+        Klist = np.vstack((Klist, K))
+    return Klist
+
+def init_pub():
+    Klist = init_lqr()
+    
+    for i in range(len(Klist)-1):
+        
+        wheel_ori_x, wheel_ori_y, wheel_ori_z = get_wheel_ori()
+        wheel_vel_x, wheel_vel_y, wheel_vel_z = get_wheel_vel()
+        body_ori_x, body_ori_y, body_ori_z = get_body_ori()
+        body_vel_x, body_vel_y, body_vel_z = get_body_vel()
+        
+        x0 = np.array([wheel_ori_y,body_ori_y,wheel_vel_y,body_vel_y])
+
+        u = -Klist[i] @ ( x0 )
+        pub_w.publish(u)
+
+    
 #######################################################################################################
-A, B, C, D = sep.Cal_Pitch_SS(z_com)
+A, B, C, D = sep.Cal_Pitch_SS(0.615)
 
 # q = [phi, theta, phi_dot, theta_dot]
 Q = sp.Matrix([ [0.3,    0,    0,    0],
@@ -236,7 +323,7 @@ if __name__ == '__main__':
         rospy.init_node('Pitch_Controller', anonymous=False) 
         
         pub_w = rospy.Publisher('/wheeled_inverted_pendulum/wheel/command', Float64, queue_size=100)
-        rospy.Subscriber('CoM_Pitch', Float64MultiArray, callback)
+        # rospy.Subscriber('CoM_Pitch', Float64MultiArray, callback)
         
         rate = rospy.Rate(100)
         gazebo_setting()
@@ -245,7 +332,7 @@ if __name__ == '__main__':
         cur_time = time.time()    
         sec_time = time.time()  
         
-        print(z_com)
+        # print(z_com)
                  
          
         while True:
@@ -261,7 +348,7 @@ if __name__ == '__main__':
             body_ori_x, body_ori_y, body_ori_z = get_body_ori()
             body_vel_x, body_vel_y, body_vel_z = get_body_vel()
             
-            theta_P = get_theta_P()
+            # theta_P = get_theta_P()
 
             x0 = np.array([wheel_ori_y,body_ori_y,wheel_vel_y,body_vel_y])
 

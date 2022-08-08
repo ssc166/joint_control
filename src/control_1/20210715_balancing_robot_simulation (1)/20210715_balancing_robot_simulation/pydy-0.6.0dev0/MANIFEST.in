@@ -1,0 +1,6 @@
+recursive-include docs *
+prune docs/_build
+include LICENSE.txt
+include *.rst
+include bin/*.py
+recursive-include pydy/viz/static *

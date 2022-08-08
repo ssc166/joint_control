@@ -1,0 +1,86 @@
+% MotionGenesis file:  3D_Differential_Mobile_Inverted_Pendulum.txt
+% Author : DONGIL CHOI
+% Program : Dynamic equation of Mobile Inverted Pendulum
+% Copyright (c) 2009-2016 Motion Genesis LLC.  Only for use with MotionGenesis.
+%--------------------------------------------------------------------
+%       Physical declarations
+NewtonianFrame 	N 		% Newtonian reference frame
+RigidFrame    F
+RigidBody 		L, R 	% Wheels of Pendulum
+RigidBody     P     % Inverted Pendulum
+Point  			LN(L) 	% Point of L in contact with N
+Point  			RN(R) 	% Point of R in contact with N
+%-----------------------------------------------------------------------
+%       Mathematical declarations
+Constant g 		 % Gravitational acceleration
+Constant d 		 % Distance from point I to Lo (or Ro)
+Constant R 		 % Radius of wheels
+Constant lp
+Variable x'' 	 	 % F1> measure number of Velocity of P in N
+Variable th''
+Variable delta'' 	 % N3> measure number of Angular velocity of P in N
+Variable wL' 	 	 % Angular velocity of L in N
+Variable wR' 	 	 % Angular velocity of R in N
+Variable TL, TR 	 % Torques on L, R
+SetGeneralizedSpeed( x', th', delta' )
+%-----------------------------------------------------------------------
+%       Mass and inertia
+P.SetMass( mp )
+L.SetMass( Mw )
+R.SetMass( Mw )
+P.SetInertia( Pcm , Ipxx, Ipyy, Ipzz )
+L.SetInertia( Lcm , P, K, J, K )
+R.SetInertia( Rcm , P, K, J, K )
+%-----------------------------------------------------------------------
+%       Rotational kinematics
+F.RotateZ( N, delta )
+P.RotateY( F, th )
+L.SetAngularVelocityAcceleration( P, wL*Py> )
+R.SetAngularVelocityAcceleration( P, wR*Py> )
+%-----------------------------------------------------------------------
+%       Translational kinematics
+Po.SetVelocityAcceleration( N, x'*Fx> )
+Lcm.Translate( Po, d*Fy> )
+Rcm.Translate( Po, -d*Fy> )
+Pcm.Translate ( Po, lp*Pz> )
+LN.SetPositionVelocity( Lcm, -R*Fz>, L )
+RN.SetPositionVelocity( Rcm, -R*Fz>, R )
+%-----------------------------------------------------------------------
+%       Rolling constraints (relates wB and wC to v and theta')
+Rolling[1] = Dot( LN.GetVelocity(N), Fx> )
+Rolling[2] = Dot( RN.GetVelocity(N), Fx> )
+SolveDt( Rolling, wL, wR )
+%-----------------------------------------------------------------------
+%   Add relevant contact/distance forces.
+System.AddForceGravity( -g*Nz> )
+L.AddTorque( P, TL*Py> )	% Torques on L
+R.AddTorque( P, TR*Py> )	% Torques on R
+L.GetResultantTorque()
+R.GetResultantTorque()
+P.GetResultantTorque()
+%-----------------------------------------------------------------------------------
+%       Form Kane's equations of motion
+Zero = System.GetDynamicsKane()
+Zero_Explicit = Explicit( Zero )
+%-----------------------------------------------------------------------------------
+%       Forward Dynamics
+Solve(Zero_Explicit, x'', th'', delta'')
+%-----------------------------------------------------------------------------------
+% Linearize equations of motion about the nominal solution
+Variable dx'', dth'', ddelta'', dTL, dTR
+ZeroLinear = Taylor(Zero_Explicit, 1, x=0:dx, x'=0:dx', x''=0:dx'', th=0:dth, th'=0:dth', th''=0:dth'', delta=0:ddelta, delta'=0:ddelta', delta''=0:ddelta'',TL=0:dTL, TR=0:dTR)
+Solve(ZeroLinear, dx'', dth'', ddelta'')
+%-----------------------------------------------------------------------------------
+% Form matrix of peturbations and its time-derivative
+Xp = [dx; dx'; dth; dth'; ddelta; ddelta'] % Matrix of perturbations
+Xd = [dx'; dx''; dth'; dth''; ddelta'; ddelta''] % Time derivative of Xm
+u = [dTL; dTR]
+%-----------------------------------------------------------------------------------
+% Form matrix A such that Xp' = A * Xp + B * u
+A = D(Xd, Transpose(Xp)) % System matrix
+B = D(Xd, Transpose(u))
+%-----------------------------------------------------------------------------------
+Save 3D_Differential_Mobile_Inverted_Pendulum.html
+OutputEncode A, B
+CODE Algebraic() 3D_Differential_Mobile_Inverted_Pendulum.m
+Quit

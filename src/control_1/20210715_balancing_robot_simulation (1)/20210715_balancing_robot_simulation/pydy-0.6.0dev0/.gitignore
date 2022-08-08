@@ -1,0 +1,58 @@
+# pydy
+
+*data.json
+*desc.json
+pydy-resources/
+
+# python
+
+*.py[cod]
+
+# Editor's default saves
+*~
+# C extensions
+*.so
+
+# Packages
+*.egg
+*.egg-info
+dist
+build
+eggs
+parts
+var
+sdist
+develop-eggs
+.installed.cfg
+lib
+lib64
+__pycache__
+
+# Installer logs
+pip-log.txt
+
+# ipython checkpoints
+*.ipynb_checkpoints
+
+# sphinx docs build
+*_build
+
+# Unit test / coverage reports
+.coverage
+.tox
+nosetests.xml
+
+# Translations
+*.mo
+
+# Mr Developer
+.mr.developer.cfg
+.project
+.pydevproject
+.idea/
+
+# vim swap files
+*.swp
+
+# vs code local settings
+.vscode/

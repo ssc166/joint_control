@@ -1,0 +1,257 @@
+<!-- Copyright (c) Motion Genesis LLC.  Only for use with MotionGenesis. -->
+<HTML><HEAD><TITLE>MotionGenesis: 3D_Differential_Mobile_Inverted_Pendulum.html</TITLE></HEAD><BODY bgcolor="#FFFFFF">
+<DIV Style="Margin-Left:4px; Margin-Top:8px">
+<nobr><font color="darkBlue"><b><font size=+1>3D_Differential_Mobile_Inverted_Pendulum.html</font> &nbsp;<font size=-1>(MotionGenesis input/output)</font></b>.</font></nobr>
+<PRE>
+   (1) % MotionGenesis file:  3D_Differential_Mobile_Inverted_Pendulum.txt
+   (2) % Author : DONGIL CHOI
+   (3) % Program : Dynamic equation of Mobile Inverted Pendulum
+   (4) % Copyright (c) 2009-2016 Motion Genesis LLC.  Only for use with MotionGenesis.
+   (5) %--------------------------------------------------------------------
+   (6) %       Physical declarations
+   (7) NewtonianFrame 	N 		% Newtonian reference frame
+   (8) RigidFrame    F
+   (9) RigidBody 		L, R 	% Wheels of Pendulum
+   (10) RigidBody     P     % Inverted Pendulum
+   (11) Point  			LN(L) 	% Point of L in contact with N
+   (12) Point  			RN(R) 	% Point of R in contact with N
+   (13) %-----------------------------------------------------------------------
+   (14) %       Mathematical declarations
+   (15) Constant g 		 % Gravitational acceleration
+   (16) Constant d 		 % Distance from point I to Lo (or Ro)
+   (17) Constant R 		 % Radius of wheels
+   (18) Constant lp
+   (19) Variable x'' 	 	 % F1> measure number of Velocity of P in N
+   (20) Variable th''
+   (21) Variable delta'' 	 % N3> measure number of Angular velocity of P in N
+   (22) Variable wL' 	 	 % Angular velocity of L in N
+   (23) Variable wR' 	 	 % Angular velocity of R in N
+   (24) Variable TL, TR 	 % Torques on L, R
+   (25) SetGeneralizedSpeed( x', th', delta' )
+   (26) %-----------------------------------------------------------------------
+   (27) %       Mass and inertia
+   (28) P.SetMass( mp )
+   (29) L.SetMass( Mw )
+   (30) R.SetMass( Mw )
+   (31) P.SetInertia( Pcm , Ipxx, Ipyy, Ipzz )
+   (32) L.SetInertia( Lcm , P, K, J, K )
+   (33) R.SetInertia( Rcm , P, K, J, K )
+   (34) %-----------------------------------------------------------------------
+   (35) %       Rotational kinematics
+   (36) F.RotateZ( N, delta )
+-> (37) F_N = [cos(delta), sin(delta), 0;  -sin(delta), cos(delta), 0;  0, 0, 1]
+-> (38) w_F_N> = delta'*Fz>
+-> (39) alf_F_N> = delta''*Fz>
+
+   (40) P.RotateY( F, th )
+-> (41) P_F = [cos(th), 0, -sin(th);  0, 1, 0;  sin(th), 0, cos(th)]
+-> (42) w_P_F> = th'*Py>
+-> (43) w_P_N> = -sin(th)*delta'*Px> + th'*Py> + cos(th)*delta'*Pz>
+-> (44) alf_P_F> = th''*Py>
+-> (45) alf_P_N> = (-cos(th)*delta'*th'-sin(th)*delta'')*Px> + th''*Py> + (cos(
+        th)*delta''-sin(th)*delta'*th')*Pz>
+
+   (46) L.SetAngularVelocityAcceleration( P, wL*Py> )
+-> (47) w_L_P> = wL*Py>
+-> (48) w_L_N> = -sin(th)*delta'*Px> + (wL+th')*Py> + cos(th)*delta'*Pz>
+-> (49) alf_L_P> = wL'*Py>
+-> (50) alf_L_N> = (-cos(th)*delta'*th'-wL*cos(th)*delta'-sin(th)*delta'')*Px>
+        + (wL'+th'')*Py> + (cos(th)*delta''-sin(th)*delta'*th'-wL*sin(th)*delt
+        a')*Pz>
+
+   (51) R.SetAngularVelocityAcceleration( P, wR*Py> )
+-> (52) w_R_P> = wR*Py>
+-> (53) w_R_N> = -sin(th)*delta'*Px> + (wR+th')*Py> + cos(th)*delta'*Pz>
+-> (54) alf_R_P> = wR'*Py>
+-> (55) alf_R_N> = (-cos(th)*delta'*th'-wR*cos(th)*delta'-sin(th)*delta'')*Px>
+        + (wR'+th'')*Py> + (cos(th)*delta''-sin(th)*delta'*th'-wR*sin(th)*delt
+        a')*Pz>
+
+   (56) %-----------------------------------------------------------------------
+   (57) %       Translational kinematics
+   (58) Po.SetVelocityAcceleration( N, x'*Fx> )
+-> (59) v_Po_N> = x'*Fx>
+-> (60) a_Po_N> = x''*Fx> + delta'*x'*Fy>
+
+   (61) Lcm.Translate( Po, d*Fy> )
+-> (62) p_Po_Lcm> = d*Fy>
+-> (63) v_Lcm_N> = (x'-d*delta')*Fx>
+-> (64) a_Lcm_N> = (x''-d*delta'')*Fx> + delta'*(x'-d*delta')*Fy>
+
+   (65) Rcm.Translate( Po, -d*Fy> )
+-> (66) p_Po_Rcm> = -d*Fy>
+-> (67) v_Rcm_N> = (x'+d*delta')*Fx>
+-> (68) a_Rcm_N> = (x''+d*delta'')*Fx> + delta'*(x'+d*delta')*Fy>
+
+   (69) Pcm.Translate ( Po, lp*Pz> )
+-> (70) p_Po_Pcm> = lp*Pz>
+-> (71) v_Pcm_N> = x'*Fx> + lp*th'*Px> + lp*sin(th)*delta'*Py>
+-> (72) a_Pcm_N> = x''*Fx> + (delta'*x'+lp*(2*cos(th)*delta'*th'+sin(th)*delta
+        ''))*Fy> - lp*(sin(th)*cos(th)*delta'^2-th'')*Px> - lp*(th'^2+sin(th)^2
+        *delta'^2)*Pz>
+
+   (73) LN.SetPositionVelocity( Lcm, -R*Fz>, L )
+-> (74) p_Lcm_LN> = -R*Fz>
+-> (75) v_LN_N> = (x'-d*delta'-R*(wL+th'))*Fx>
+
+   (76) RN.SetPositionVelocity( Rcm, -R*Fz>, R )
+-> (77) p_Rcm_RN> = -R*Fz>
+-> (78) v_RN_N> = (x'+d*delta'-R*(wR+th'))*Fx>
+
+   (79) %-----------------------------------------------------------------------
+   (80) %       Rolling constraints (relates wB and wC to v and theta')
+   (81) Rolling[1] = Dot( LN.GetVelocity(N), Fx> )
+-> (82) Rolling[1] = x' - d*delta' - R*(wL+th')
+
+   (83) Rolling[2] = Dot( RN.GetVelocity(N), Fx> )
+-> (84) Rolling[2] = x' + d*delta' - R*(wR+th')
+
+   (85) SolveDt( Rolling, wL, wR )
+-> (86) wL = (x'-d*delta')/R - th'
+-> (87) wR = (x'+d*delta')/R - th'
+-> (88) wL' = (x''-d*delta'')/R - th''
+-> (89) wR' = (x''+d*delta'')/R - th''
+
+   (90) %-----------------------------------------------------------------------
+   (91) %   Add relevant contact/distance forces.
+   (92) System.AddForceGravity( -g*Nz> )
+-> (93) Force_Lcm> = -Mw*g*Nz>
+-> (94) Force_Pcm> = -mp*g*Nz>
+-> (95) Force_Rcm> = -Mw*g*Nz>
+
+   (96) L.AddTorque( P, TL*Py> )	% Torques on L
+-> (97) Torque_L_P> = TL*Py>
+
+   (98) R.AddTorque( P, TR*Py> )	% Torques on R
+-> (99) Torque_R_P> = TR*Py>
+
+   (100) %-----------------------------------------------------------------------------------
+   (101) %       Form Kane's equations of motion
+   (102) Zero = System.GetDynamicsKane()
+-> (103) Zero[1] = mp*lp*cos(th)*th'' + (mp+2*Mw+2*J/R^2)*x'' - (TL+TR)/R - mp*
+         lp*sin(th)*(delta'^2+th'^2)
+-> (104) Zero[2] = TL + TR + (Ipzz-Ipxx-mp*lp^2)*sin(th)*cos(th)*delta'^2 + mp*
+         lp*cos(th)*x'' + (Ipyy+mp*lp^2)*th'' - mp*g*lp*sin(th)
+
+-> (105) Zero[3] = d*(TL-TR)/R + sin(th)*delta'*(2*(Ipxx-Ipzz)*cos(th)*th'+mp*
+         lp*(x'+2*lp*cos(th)*th')) + (Ipzz+2*K+2*Mw*d^2+2*J*d^2/R^2-(Ipzz-Ipxx-
+         mp*lp^2)*sin(th)^2)*delta''
+
+   (106) Zero_Explicit = Explicit( Zero )
+-> (107) Zero_Explicit[1] = mp*lp*cos(th)*th'' + (mp+2*Mw+2*J/R^2)*x'' - (TL+
+         TR)/R - mp*lp*sin(th)*(delta'^2+th'^2)
+
+-> (108) Zero_Explicit[2] = TL + TR + (Ipzz-Ipxx-mp*lp^2)*sin(th)*cos(th)*delt
+         a'^2 + mp*lp*cos(th)*x'' + (Ipyy+mp*lp^2)*th'' - mp*g*lp*sin(th)
+
+-> (109) Zero_Explicit[3] = d*(TL-TR)/R + sin(th)*delta'*(2*(Ipxx-Ipzz)*cos(th)
+         *th'+mp*lp*(x'+2*lp*cos(th)*th')) + (Ipzz+2*K+2*Mw*d^2+2*J*d^2/R^2-(
+         Ipzz-Ipxx-mp*lp^2)*sin(th)^2)*delta''
+
+   (110) %-----------------------------------------------------------------------------------
+   (111) %       Forward Dynamics
+   (112) Solve(Zero_Explicit, x'', th'', delta'')
+-> (113) x'' = ((Ipyy+mp*lp^2)*((TL+TR)/R+mp*lp*sin(th)*(delta'^2+th'^2))-mp*
+         lp*cos(th)*(mp*g*lp*sin(th)-TL-TR-(Ipzz-Ipxx-mp*lp^2)*sin(th)*cos(th)*
+         delta'^2))/((Ipyy+mp*lp^2)*(mp+2*Mw+2*J/R^2)-mp^2*lp^2*cos(th)^2)
+
+-> (114) th'' = -(mp*lp*cos(th)*((TL+TR)/R+mp*lp*sin(th)*(delta'^2+th'^2))-(mp+
+         2*Mw+2*J/R^2)*(mp*g*lp*sin(th)-TL-TR-(Ipzz-Ipxx-mp*lp^2)*sin(th)*cos(
+         th)*delta'^2))/((Ipyy+mp*lp^2)*(mp+2*Mw+2*J/R^2)-mp^2*lp^2*cos(th)^2)
+
+-> (115) delta'' = -(d*(TL-TR)/R+sin(th)*delta'*(2*(Ipxx-Ipzz)*cos(th)*th'+mp*
+         lp*(x'+2*lp*cos(th)*th')))/(Ipzz+2*K+2*Mw*d^2+2*J*d^2/R^2-(Ipzz-Ipxx-
+         mp*lp^2)*sin(th)^2)
+
+   (116) %-----------------------------------------------------------------------------------
+   (117) % Linearize equations of motion about the nominal solution
+   (118) Variable dx'', dth'', ddelta'', dTL, dTR
+   (119) ZeroLinear = Taylor(Zero_Explicit, 1, x=0:dx, x'=0:dx', x''=0:dx'', th=0:dth, th'=0:dth', th''=0:dth'', delta=0:ddelta, delta'=0:ddelta', delta''=0:ddelta'',TL=0:dTL, TR=0:dTR)
+-> (120) ZeroLinear[1] = mp*lp*dth'' + (mp+2*Mw+2*J/R^2)*dx'' - (dTL+dTR)/R
+-> (121) ZeroLinear[2] = dTL + dTR + mp*lp*dx'' + (Ipyy+mp*lp^2)*dth'' - mp*g*
+         lp*dth
+-> (122) ZeroLinear[3] = d*(dTL-dTR)/R + (Ipzz+2*K+2*Mw*d^2+2*J*d^2/R^2)*ddelt
+         a''
+
+   (123) Solve(ZeroLinear, dx'', dth'', ddelta'')
+-> (124) dx'' = -((Ipyy+mp*lp^2)*(dTL+dTR)/R+mp*lp*(dTL+dTR-mp*g*lp*dth))/(mp^2
+         *lp^2-(Ipyy+mp*lp^2)*(mp+2*Mw+2*J/R^2))
+
+-> (125) dth'' = (mp*lp*(dTL+dTR)/R+(mp+2*Mw+2*J/R^2)*(dTL+dTR-mp*g*lp*dth))/(
+         mp^2*lp^2-(Ipyy+mp*lp^2)*(mp+2*Mw+2*J/R^2))
+
+-> (126) ddelta'' = -d*(dTL-dTR)/(R*(Ipzz+2*K+2*Mw*d^2+2*J*d^2/R^2))
+
+   (127) %-----------------------------------------------------------------------------------
+   (128) % Form matrix of peturbations and its time-derivative
+   (129) Xp = [dx; dx'; dth; dth'; ddelta; ddelta'] % Matrix of perturbations
+-> (130) Xp = [dx;  dx';  dth;  dth';  ddelta;  ddelta']
+
+   (131) Xd = [dx'; dx''; dth'; dth''; ddelta'; ddelta''] % Time derivative of Xm
+-> (132) Xd = [dx';  dx'';  dth';  dth'';  ddelta';  ddelta'']
+
+   (133) u = [dTL; dTR]
+-> (134) u = [dTL;  dTR]
+
+   (135) %-----------------------------------------------------------------------------------
+   (136) % Form matrix A such that Xp' = A * Xp + B * u
+   (137) A = D(Xd, Transpose(Xp)) % System matrix
+-> (138) A[1,1] = 0
+-> (139) A[1,2] = 1
+-> (140) A[1,3] = 0
+-> (141) A[1,4] = 0
+-> (142) A[1,5] = 0
+-> (143) A[1,6] = 0
+-> (144) A[2,1] = 0
+-> (145) A[2,2] = 0
+-> (146) A[2,3] = mp^2*g*lp^2/(mp^2*lp^2-(Ipyy+mp*lp^2)*(mp+2*Mw+2*J/R^2))
+-> (147) A[2,4] = 0
+-> (148) A[2,5] = 0
+-> (149) A[2,6] = 0
+-> (150) A[3,1] = 0
+-> (151) A[3,2] = 0
+-> (152) A[3,3] = 0
+-> (153) A[3,4] = 1
+-> (154) A[3,5] = 0
+-> (155) A[3,6] = 0
+-> (156) A[4,1] = 0
+-> (157) A[4,2] = 0
+-> (158) A[4,3] = -mp*g*lp*(mp+2*Mw+2*J/R^2)/(mp^2*lp^2-(Ipyy+mp*lp^2)*(mp+2*
+         Mw+2*J/R^2))
+-> (159) A[4,4] = 0
+-> (160) A[4,5] = 0
+-> (161) A[4,6] = 0
+-> (162) A[5,1] = 0
+-> (163) A[5,2] = 0
+-> (164) A[5,3] = 0
+-> (165) A[5,4] = 0
+-> (166) A[5,5] = 0
+-> (167) A[5,6] = 1
+-> (168) A[6,1] = 0
+-> (169) A[6,2] = 0
+-> (170) A[6,3] = 0
+-> (171) A[6,4] = 0
+-> (172) A[6,5] = 0
+-> (173) A[6,6] = 0
+
+   (174) B = D(Xd, Transpose(u))
+-> (175) B[1,1] = 0
+-> (176) B[1,2] = 0
+-> (177) B[2,1] = -(mp*lp+(Ipyy+mp*lp^2)/R)/(mp^2*lp^2-(Ipyy+mp*lp^2)*(mp+2*Mw+
+         2*J/R^2))
+-> (178) B[2,2] = -(mp*lp+(Ipyy+mp*lp^2)/R)/(mp^2*lp^2-(Ipyy+mp*lp^2)*(mp+2*Mw+
+         2*J/R^2))
+-> (179) B[3,1] = 0
+-> (180) B[3,2] = 0
+-> (181) B[4,1] = (mp+2*Mw+2*J/R^2+mp*lp/R)/(mp^2*lp^2-(Ipyy+mp*lp^2)*(mp+2*Mw+
+         2*J/R^2))
+-> (182) B[4,2] = (mp+2*Mw+2*J/R^2+mp*lp/R)/(mp^2*lp^2-(Ipyy+mp*lp^2)*(mp+2*Mw+
+         2*J/R^2))
+-> (183) B[5,1] = 0
+-> (184) B[5,2] = 0
+-> (185) B[6,1] = -d/(R*(Ipzz+2*K+2*Mw*d^2+2*J*d^2/R^2))
+-> (186) B[6,2] = d/(R*(Ipzz+2*K+2*Mw*d^2+2*J*d^2/R^2))
+
+   (187) %-----------------------------------------------------------------------------------
+</PRE><nobr><font color="darkBlue"><font size=-3><b>Saved by Dongil Choi. &nbsp; Portions copyright (c) 2009-2016 Motion Genesis LLC.  Rights reserved.  Only for use with MotionGenesis.</b></font></font></nobr>
+</DIV></BODY></HTML>

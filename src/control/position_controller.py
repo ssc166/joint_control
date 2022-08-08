@@ -137,7 +137,7 @@ def init_pos():
     # rospy.loginfo("Start Calculation")
     q2, q3, q4 = it.joint_traj()
     # rospy.loginfo("Calculate Joint Trajectory")
-    rate = rospy.Rate(1000)
+    rate = rospy.Rate(100)
 
     for i in range(0,len(q2)-1):
         pub_2.publish(q2[i])
@@ -174,7 +174,7 @@ if __name__ == '__main__':
         pub_2 = rospy.Publisher('/wheeled_inverted_pendulum/ankle_pitch/command', Float64, queue_size=100)
         pub_3 = rospy.Publisher('/wheeled_inverted_pendulum/knee/command', Float64, queue_size=100)
         pub_4 = rospy.Publisher('/wheeled_inverted_pendulum/hip_pitch/command', Float64, queue_size=100)
-        rate = rospy.Rate(1000)
+        rate = rospy.Rate(100)
         gazebo_setting()
         RAD2DEG = 180/np.pi
 
@@ -185,7 +185,7 @@ if __name__ == '__main__':
 
         thetalistd = np.array([0, q2d, q3d, q4d])
 
-        init_pos()
+        # init_pos()
         cur_time = time.time()    
         sec_time = time.time() 
 
@@ -206,9 +206,9 @@ if __name__ == '__main__':
             print("dt: ", dt)
             print('----------------------------------')
 
-            # pub_2.publish(thetalistd[1])
-            # pub_3.publish(thetalistd[2])
-            # pub_4.publish(thetalistd[3])
+            pub_2.publish(thetalistd[1])
+            pub_3.publish(thetalistd[2])
+            pub_4.publish(thetalistd[3])
             
             
             rate.sleep()

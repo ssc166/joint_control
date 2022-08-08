@@ -433,7 +433,7 @@
             <maxVel>0.001</maxVel>
             <minDepth>0.00000000001</minDepth>
             <gravity>1</gravity>
-            <material>Gazebo/White</material>
+            <material>Gazebo/Grey</material>
         </gazebo>
 
         <gazebo reference="hip_to_knee_link">
@@ -444,7 +444,7 @@
             <maxVel>0.001</maxVel>
             <minDepth>0.00000000001</minDepth>
             <gravity>1</gravity>
-            <material>Gazebo/White</material>
+            <material>Gazebo/Grey</material>
         </gazebo>
 
         <gazebo reference="knee_ankle_link">
@@ -455,7 +455,7 @@
             <maxVel>0.001</maxVel>
             <minDepth>0.00000000001</minDepth>
             <gravity>1</gravity>
-            <material>Gazebo/White</material>
+            <material>Gazebo/Grey</material>
         </gazebo>
 
         <gazebo reference="ankle_link">
@@ -466,7 +466,7 @@
             <maxVel>0.001</maxVel>
             <minDepth>0.00000000001</minDepth>
             <gravity>1</gravity>
-            <material>Gazebo/White</material>
+            <material>Gazebo/Grey</material>
         </gazebo>
 
         <gazebo reference="wheel_link">
