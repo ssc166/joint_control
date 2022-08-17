@@ -82,9 +82,8 @@ def get_end_point(q2, q3, q4):
     theta_P = np.arctan(float(x_com)/float(z_com))
     return x,z, x_com, z_com, theta_P
 
-def horizon_traj(a, t, time_step,thetalistd,horizon_start, horizon_end, z_com):
+def horizon_angle_traj(a, t, time_step,thetalistd, horizon_path, z_com):
     time, traj = utils.Trapezoidal_Traj_Gen_Given_Amax_and_T(a,t,time_step)
-    horizon_path = utils.Path_Gen(horizon_start, horizon_end, traj[:,0])
     
     m1 = 2.486 + 0.3
     m2 = 1.416
