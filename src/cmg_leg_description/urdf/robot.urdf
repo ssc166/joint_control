@@ -6,11 +6,12 @@
 		</link>
 
         <joint name="cmg_hip_joint" type="fixed">
-		    <origin xyz="0 0 1.022142" rpy="0.0 0.0 0.0" /> 
+		    <origin xyz="0 0 0.845" rpy="0.0 0.0 0.0" /> 
 		    <parent link="cmg"/>
 		    <child link="cmg_hip_link"/>
 		</joint> 
         <!-- 1.022142 -->
+        <!-- HEIGHT=0.9, origin 0.845-->
 
         <link name="cmg_hip_link">
             <visual>
@@ -181,15 +182,15 @@
 
 <!-- ######################################################################################### -->
 
-        <joint name="hip_pitch_joint" type="revolute">
+        <joint name="hip_pitch_joint" type="continuous">
 		    <!-- <origin xyz="0 -0.0045 -0.451221" rpy="0.0 0.0 0.0" />  -->
-		    <origin xyz="0 0 -0.2222" rpy="0.0 0 0.0" />
+		    <origin xyz="0 0 -0.2222" rpy="0.0 -0.885462876712376 0.0" />
             <!-- -0.8  -->
             <axis xyz="0 1 0"/>
 		    <parent link="cmg_hip_link"/>
 		    <child link="hip_to_knee_link" />
-            <limit effort="1000" velocity="1000" upper="0" lower="-1.57"/>
-            <joint_properties damping="1.0" friction="1.0"/>
+            <limit effort="1000" velocity="1000"/>
+            <joint_properties damping="0.0" friction=".0"/>
 		</joint> 
 
         <link name="hip_to_knee_link">
@@ -212,20 +213,20 @@
 
             <inertial>
                 <mass value="1.739" /> 
-                <origin xyz="0.0 0 0.18878" rpy="3.14 0 0"/>
+                <origin xyz="0.0 0 -0.18878" rpy="3.14 0 0"/>
                 <inertia ixx="0.008595913" ixy="0.000104152"  ixz="0.000298503"  iyy="0.007917693"  iyz="-0.000246913" izz="0.002944951" />
             </inertial>
         </link> 
 <!-- ######################################################################################### -->
 
-        <joint name="knee_joint" type="revolute">
-		    <origin xyz="0 0 -0.28" rpy="0.0 0 0.0" /> 
+        <joint name="knee_joint" type="continuous">
+		    <origin xyz="0 0 -0.28" rpy="0.0 1.63070174355873 0.0" /> 
             <!-- 1.5 -->
             <axis xyz="0 1 0"/>
 		    <parent link="hip_to_knee_link"/>
 		    <child link="knee_ankle_link" />
-            <limit effort="1000" velocity="1000" upper="2.4" lower="0.0"/>
-            <joint_properties damping="1.0" friction="1.0"/>
+            <limit effort="1000" velocity="1000"/>
+            <joint_properties damping="0.0" friction="0.0"/>
 		</joint> 
 
         <link name="knee_ankle_link">
@@ -248,20 +249,20 @@
 
             <inertial>
                 <mass value="1.416" /> 
-                <origin xyz="0.0 0 0.045289" rpy="3.14 -0 0"/>
+                <origin xyz="0.0 0 -0.045289" rpy="3.14 -0 0"/>
                 <inertia ixx="0.010192583" ixy="0.000128782"  ixz="0.000780769"  iyy="0.009599672"  iyz="-0.000476197" izz="0.002390603" />
             </inertial>
         </link> 
 <!-- ######################################################################################### -->
 
-        <joint name="ankle_pitch_joint" type="revolute">
-		    <origin xyz="0 0 -0.279942" rpy="0.0 0 0.0" /> 
+        <joint name="ankle_pitch_joint" type="continuous">
+		    <origin xyz="0 0 -0.279942" rpy="0.0 -0.745238866846359 0.0" /> 
             <!-- -0.7 -->
             <axis xyz="0 1 0"/>
 		    <parent link="knee_ankle_link"/>
 		    <child link="ankle_link" />
-            <limit effort="1000" velocity="1000" upper="0.0" lower="-1.5"/>
-            <joint_properties damping="1.0" friction="1.0"/>
+            <limit effort="1000" velocity="1000"/>
+            <joint_properties damping="0.0" friction="0.0"/>
 		</joint> 
 
         <link name="ankle_link">

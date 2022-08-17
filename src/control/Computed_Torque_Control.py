@@ -10,6 +10,7 @@ import WIP_utils as utils
 import modern_robotics as mr
 import time
 import os
+import init_traj
 
 
 def gazebo_setting():
@@ -25,7 +26,7 @@ def get_link_state(link_name_main, reference_frame):
 
     return link_state
 
-def get_link_ori(link_name_main, reference_frame):
+def get_link_ori_vel(link_name_main, reference_frame):
     
     link_state = get_link_state(link_name_main, reference_frame)
     
@@ -33,20 +34,14 @@ def get_link_ori(link_name_main, reference_frame):
     link_ori_x = X
     link_ori_y = Y
     link_ori_z = Z
-     
-    return link_ori_x, link_ori_y, link_ori_z
-
-def get_link_vel(link_name_main, reference_frame):
-    
-    link_state = get_link_state(link_name_main, reference_frame)
     
     link_vel_x = link_state.link_state.twist.angular.x
     link_vel_y = link_state.link_state.twist.angular.y
     link_vel_z = link_state.link_state.twist.angular.z
-    
-    return link_vel_x, link_vel_y, link_vel_z
+     
+    return link_ori_x, link_ori_y, link_ori_z, link_vel_x, link_vel_y, link_vel_z
 
-def get_cur_deg():
+def get_cur_deg_vel():
     global link_name_list
 
     ankle_link = 'ankle_link'
@@ -55,48 +50,374 @@ def get_cur_deg():
     cmg_link = 'cmg'
     link_name_list = [ankle_link, knee_ankle_link, hip_to_knee_link, cmg_link]
 
-    L1_x, L1_y, L1_z = get_link_ori(link_name_list[0], 'world')
-    L2_x, L2_y, L2_z = get_link_ori(link_name_list[1], link_name_list[0])
-    # L3_x, L3_y, L3_z = get_link_ori(link_name_list[2], 'world')
-    L4_x, L4_y, L4_z = get_link_ori(link_name_list[3], link_name_list[2])
+    link1_ori_x, link1_ori_y, link1_ori_z, link1_vel_x, link1_vel_y, link1_vel_z = get_link_ori_vel(link_name_list[0], 'world')
+    link2_ori_x, link2_ori_y, link2_ori_z, link2_vel_x, link2_vel_y, link2_vel_z = get_link_ori_vel(link_name_list[1], link_name_list[0])
+    link3_ori_x, link3_ori_y, link3_ori_z, link3_vel_x, link3_vel_y, link3_vel_z = get_link_ori_vel(link_name_list[2], link_name_list[1])
+    link_4ori_x, link4_ori_y, link4_ori_z, link4_vel_x, link4_vel_y, link4_vel_z = get_link_ori_vel(link_name_list[3], link_name_list[2])
 
-    L3_y = -(L2_y + L4_y)
+    link3_ori_y = -(link2_ori_y + link4_ori_y)
 
-    thetalist = np.array([L1_y, L2_y, L3_y, L4_y])
+    thetalist = np.array([[-link1_ori_y], [-link2_ori_y], [-link3_ori_y], [-link4_ori_y]])
+    dthetalist = np.array([[-link1_vel_y], [-link2_vel_y], [-link3_vel_y], [-link4_vel_y]])
  
-    return thetalist
+    return thetalist, dthetalist
 
-def get_cur_vel():
+# def get_cur_vel():
 
-    L1_x, L1_y, L1_z = get_link_vel(link_name_list[0], 'world')
-    L2_x, L2_y, L2_z = get_link_vel(link_name_list[1], 'world')
-    L3_x, L3_y, L3_z = get_link_vel(link_name_list[2], 'world')
-    L4_x, L4_y, L4_z = get_link_vel(link_name_list[3], 'world')
+#     L1_x, L1_y, L1_z = get_link_vel(link_name_list[0], 'world')
+#     L2_x, L2_y, L2_z = get_link_vel(link_name_list[1], 'world')
+#     L3_x, L3_y, L3_z = get_link_vel(link_name_list[2], 'world')
+#     L4_x, L4_y, L4_z = get_link_vel(link_name_list[3], 'world')
 
-    dthetalist = np.array([L1_y, L2_y, L3_y, L4_y])
+#     dthetalist = np.array([L1_y, L2_y, L3_y, L4_y])
  
-    return dthetalist    
+#     return dthetalist    
 
-def CTC(thetalist, dthetalist, thetalistd, dt, Mlist, Slist):
+def get_deg(h):
+    m2 = 1.416
+    m3 = 1.739
+    m4 = 16.09
 
-    dtheta1d = (thetalistd[0] - thetalist[0])/dt
-    dtheta2d = (thetalistd[1] - thetalist[1])/dt
-    dtheta3d = (thetalistd[2] - thetalist[2])/dt
-    dtheta4d = (thetalistd[3] - thetalist[3])/dt
-    dthetalistd = np.array([dtheta1d, dtheta2d, dtheta3d, dtheta4d])
+    L1 = 0.171
+    L2 = 0.28
+    L3 = 0.28
+    L4 = 0.346
 
-    ddtheta1d = (dthetalistd[0] - dthetalist[0])/dt
-    ddtheta2d = (dthetalistd[1] - dthetalist[1])/dt
-    ddtheta3d = (dthetalistd[2] - dthetalist[2])/dt
-    ddtheta4d = (dthetalistd[3] - dthetalist[3])/dt
-    ddthetalistd = np.array([ddtheta1d, ddtheta2d, ddtheta3d, ddtheta4d])
+    L2c = L2 - 0.045289
+    L3c = L3 - 0.18878
+
+    theta_3, q2 = sp.symbols('theta_3, q2')
+    
+    A = (h-L1-L4)/L2
+    B = m2*L2c + m3*L2+m4*L2
+    C = m3*L3c + m4*L3
+    
+    f1 = sp.Eq(sp.cos(q2)+sp.sin(theta_3),float(A))
+    f2 = sp.Eq(-float(B)*sp.sin(q2)+float(C)*sp.cos(theta_3),0)
+    sol = sp.solve([f1,f2])
+    solu = sol[0]
+
+    q2 = solu[q2]
+    theta_3 = solu[theta_3]
+    q1 = np.pi/2
+    q3 = theta_3-q1-q2
+    q4 = -(q2+q3)
+
+    thetalistd = np.array([q1, q2, q3,q4])
+    return thetalistd, h
+
+def get_end_point(q1, q2, q3, q4):
+    m1 = 2.486 + 0.3
+    m2 = 1.416
+    m3 = 1.739
+    m4 = 16.09
+
+    L1 = 0.171
+    L2 = 0.28
+    L3 = 0.28
+    L4 = 0.346
+
+    L1c = L1
+    L2c = L2 - 0.045289
+    L3c = L3 - 0.18878
+    L4c = 0.158527
+
+    theta_1 = float(q1)
+    theta_2 = float(q1 + q2)
+    theta_3 = float(q1 + q2 + q3)
+    theta_4 = float(q1 + q2 + q3 + q4)
+
+    x = L1 * np.cos(theta_1) + L2 * np.cos(theta_2) + L3 * np.cos(theta_3) + L4 * np.cos(theta_4)
+    z = L1 * np.sin(theta_1) + L2 * np.sin(theta_2) + L3 * np.sin(theta_3) + L4 * np.sin(theta_4)
+
+    x_1 = L1c * np.cos(theta_1)
+    x_2 = L1 * np.cos(theta_1) + L2c * np.cos(theta_2)
+    x_3 = L1 * np.cos(theta_1) + L2 * np.cos(theta_2) + L3c*np.cos(theta_3)
+    x_4 = L1 * np.cos(theta_1) + L2 * np.cos(theta_2) + L3 * np.cos(theta_3) + L4c * np.cos(theta_4)
+    x_com = (m1*x_1 + m2*x_2 + m3*x_3+ m4*x_4) / (m1 + m2 + m3 + m4)
+
+    z_1c = L1c * np.sin(theta_1)
+    z_2c = L1 * np.sin(theta_1) + L2c * np.sin(theta_2)
+    z_3c = L1 * np.sin(theta_1) + L2 * np.sin(theta_2) + L3c*np.sin(theta_3)
+    z_4c = L1 * np.sin(theta_1) + L2 * np.sin(theta_2) + L3 * np.sin(theta_3) + L4c * np.sin(theta_4)
+
+    z_com = (m1*z_1c + m2*z_2c + m3*z_3c + m4*z_4c) / (m1 + m2 + m3 + m4)
+    theta_P = np.arctan(float(x_com)/float(z_com))
+    return x,z, theta_P
+
+def horizon_traj(h_cur, horizon_cur, horizon_end, thetalistd):
+    time, traj = utils.Trapezoidal_Traj_Gen_Given_Amax_and_T(1,2,0.03)
+    horizon_path = utils.Path_Gen(horizon_cur, horizon_end, traj[:,0])
+    m1 = 2.486 + 0.3
+    m2 = 1.416
+    m3 = 1.739
+    m4 = 16.09
+
+    L1 = 0.171
+    L2 = 0.28
+    L3 = 0.280
+    L4 = 0.346
+
+    L1c = L1/2
+    L2c = L2 - 0.045289
+    L3c = L3 - 0.18878
+
+    h = h_cur
+    q1list = np.array([0])
+    q2list = np.array([thetalistd[1]])
+    q3list = np.array([thetalistd[2]])
+    q4list = np.array([thetalistd[3]])
+
+    for i in range(0, len(time)-1):
+        
+
+        A = (h-L4-L1)/L2
+        B = horizon_path[i]/L2
+
+        theta_2, theta_3 = sp.symbols('theta_2, theta_3')
+        f1 = sp.Eq(sp.sin(theta_2)+sp.sin(theta_3),float(A))
+        f2 = sp.Eq(sp.cos(theta_2)+sp.cos(theta_3),float(B))
+        # f3 = sp.Eq(sp.sin(theta_2)+sp.sin(theta_3),float(E))
+
+        sol = sp.solve([f1,f2])
+        solu = sol[0]
+
+        theta_2 = solu[theta_2]
+        theta_3 = solu[theta_3]
+        q1 = np.pi/2
+        q2 = theta_2-q1
+        q3 = theta_3-q1-q2
+        q4 = -(q2+q3)
+
+        q1list = np.vstack((q1list,0))
+        q2list = np.vstack((q2list,q2))
+        q3list = np.vstack((q3list,q3))
+        q4list = np.vstack((q4list,q4))
 
     
 
-    torque = mr.ComputedTorque(thetalist, dthetalist, eint, g, Mlist, Glist, Slist, \
-                   thetalistd, dthetalistd, ddthetalistd, Kp, Ki, Kd)
+    return q1list, q2list, q3list, q4list
 
+def CTC(thetalist_des,thetalist,thetalist_prev, dthetalistd, dt):
+    m1 = 2.486 + 0.3
+    m2 = 1.416
+    m3 = 1.739
+    m4 = 16.09
+
+    L1 = 0.171
+    L2 = 0.28
+    L3 = 0.280
+    L4 = 0.346
+
+    L1c = L1/2
+    L2c = L2 - 0.045289
+    L3c = L3 - 0.18878
+    L4c = 0.158527
+    
+    theta_1 = thetalist[0]
+    theta_2 = thetalist[1]
+    theta_3 = thetalist[2]
+    theta_4 = thetalist[3]
+    
+    theta_1_prev = thetalist_prev[0]
+    theta_2_prev = thetalist_prev[1]
+    theta_3_prev = thetalist_prev[2]
+    theta_4_prev = thetalist_prev[3]
+    
+    dtheta_1 = dthetalistd[0]
+    dtheta_2 = dthetalistd[1]
+    dtheta_3 = dthetalistd[2]
+    dtheta_4 = dthetalistd[3]
+    
+    eint = np.array([[0.2], [0.2], [0.2], [0.2]])
+    g = np.array([0, 0, -9.8])
+    
+    M01 = np.array([[1, 0, 0,       0],
+                    [0, 1, 0,       0],
+                    [0, 0, 1,       0],
+                    [0, 0, 0,       1]])
+    
+    M12 = np.array([[1, 0, 0,        0],
+                    [0, 1, 0,       L1c],
+                    [0, 0, 1,        0],
+                    [0, 0, 0,        1]])
+    
+    M23 = np.array([[ 1, 0, 0,      0],
+                    [ 0, 1, 0,      L2c],
+                    [ 0, 0, 1,       0],
+                    [ 0, 0, 0,       1]])
+    
+    M34 = np.array([[1, 0, 0,       0],
+                    [0, 1, 0,       L3c],
+                    [0, 0, 1,      0],
+                    [0, 0, 0,       1]])
+    
+    M45 = np.array([[1, 0, 0,       0],
+                    [0, 1, 0,      L4c],
+                    [0, 0, 1,       0],
+                    [0, 0, 0,       1]])
+    
+    G1 = np.diag([0.00613516, 0.00614941, 0.004981955, m1, m1, m1]) 
+    G2 = np.diag([0.010192583, 0.009599672, 0.002390603, m2, m2, m2])
+    G3 = np.diag([0.008595913, 0.007917693, 0.002944951, m3, m3, m3])
+    G4 = np.diag([0.306643651, 0.257336003, 0.140868631, m4, m4, m4]) 
+    
+    Glist = np.array([G1, G2, G3, G4])
+    Mlist = np.array([M01, M12, M23, M34, M45])
+    Slist = np.array([[0, 0, 1,      0, 0,     0],
+                      [0, 0, -1,   -L1, 0,     0],
+                      [0, 0, 1, L1 + L2, 0, 0.0],
+                      [0, 0, -1, -(L1 + L2 +L3 ), 0 , 0.0]]).T
+    Kp = 0.1
+    Ki = 0.1
+    Kd = 0.1
+    
+    thetalistd = np.array([[0], [thetalist_des[1]], [thetalist_des[2]], [thetalist_des[3]]],dtype=float)
+    # thetalistd = np.array([traj_th1[i+1], traj_th2[i+1], traj_th3[i+1], traj_th4[i+1]],dtype=float)
+    dthetalist = np.array([(theta_1-theta_1_prev)/dt, (theta_2-theta_2_prev)/dt, (theta_3-theta_3_prev)/dt, (theta_4-theta_4_prev)/dt],dtype=float)
+    ddthetalistd = np.array([(dtheta_1-dthetalist[0])/dt, (dtheta_2-dthetalist[1])/dt, (dtheta_3-dthetalist[2])/dt, (dtheta_4-dthetalist[3])/dt],dtype=float)
+    
+    e = np.subtract(thetalistd, thetalist)
+    MassMatrix = mr.MassMatrix(thetalist, Mlist, Glist, Slist)
+    error = Kp * e + Ki * (np.array(eint) + e) \
+            + Kd * (np.subtract(dthetalistd, dthetalist))
+            
+    # print(error)
+    # print('------------------')  
+    # print(np.array(eint) + e) 
+    # print(np.subtract(dthetalistd, dthetalist)) 
+    # print('------------------')       
+
+    
+    inv_dyn = np.array([mr.InverseDynamics(thetalist, dthetalist, ddthetalistd, g, \
+                        [0, 0, 0, 0, 0, 0], Mlist, Glist, Slist)]).T
+    # print(inv_dyn)
+    torque = np.dot(MassMatrix,error)+inv_dyn  
     return torque
+    
+
+
+def CTC_traj(q1list, q2list, q3list, q4list):
+    time_, traj_ = utils.Trapezoidal_Traj_Gen_Given_Amax_and_T(1,2,0.03)
+    # thetalist = get_cur_deg()
+    
+    m1 = 2.486 + 0.3
+    m2 = 1.416
+    m3 = 1.739
+    m4 = 16.09
+
+    L1 = 0.171
+    L2 = 0.28
+    L3 = 0.280
+    L4 = 0.346
+
+    L1c = L1/2
+    L2c = L2 - 0.045289
+    L3c = L3 - 0.18878
+    L4c = 0.158527
+
+    traj_th1 = q1list
+    traj_th2 = q2list
+    traj_th3 = q3list
+    traj_th4 = q4list
+
+    eint = np.array([[0.2], [0.2], [0.2], [0.2]])
+    g = np.array([0, 0, -9.8])
+    
+    M01 = np.array([[1, 0, 0,       0],
+                    [0, 1, 0,       0],
+                    [0, 0, 1,       0],
+                    [0, 0, 0,       1]])
+    
+    M12 = np.array([[1, 0, 0,        0],
+                    [0, 1, 0,       L1c],
+                    [0, 0, 1,        0],
+                    [0, 0, 0,        1]])
+    
+    M23 = np.array([[ 1, 0, 0,      0],
+                    [ 0, 1, 0,      L2c],
+                    [ 0, 0, 1,       0],
+                    [ 0, 0, 0,       1]])
+    
+    M34 = np.array([[1, 0, 0,       0],
+                    [0, 1, 0,       L3c],
+                    [0, 0, 1,      0],
+                    [0, 0, 0,       1]])
+    
+    M45 = np.array([[1, 0, 0,       0],
+                    [0, 1, 0,      L4c],
+                    [0, 0, 1,       0],
+                    [0, 0, 0,       1]])
+    
+    G1 = np.diag([0.00613516, 0.00614941, 0.004981955, m1, m1, m1]) 
+    G2 = np.diag([0.010192583, 0.009599672, 0.002390603, m2, m2, m2])
+    G3 = np.diag([0.008595913, 0.007917693, 0.002944951, m3, m3, m3])
+    G4 = np.diag([0.306643651, 0.257336003, 0.140868631, m4, m4, m4]) 
+    
+    Glist = np.array([G1, G2, G3, G4])
+    Mlist = np.array([M01, M12, M23, M34, M45])
+    Slist = np.array([[0, 0, 1,      0, 0,     0],
+                      [0, 0, -1,   -L1, 0,     0],
+                      [0, 0, 1, L1 + L2, 0, 0.0],
+                      [0, 0, -1, -(L1 + L2 +L3 ), 0 , 0.0]]).T
+    Kp = 10
+    Ki = 0.1
+    Kd = 0.1
+    dt = 0.015
+
+    # thetalist_prev, dthetalist_prev = get_cur_deg_vel()
+    rate = rospy.Rate(1000)
+    cur_time = time.time()    
+    for i in range(0, len(time_)-1):
+        prev_time = cur_time
+        cur_time = time.time()
+        ddt = cur_time - prev_time 
+        print(ddt)
+        
+        thetalist, dthetalist = get_cur_deg_vel()
+        # print(thetalist)
+        thetalistd = np.array([traj_th1[i], traj_th2[i], traj_th3[i], traj_th4[i]],dtype=float)
+        # thetalistd = np.array([traj_th1[i+1], traj_th2[i+1], traj_th3[i+1], traj_th4[i+1]],dtype=float)
+        dthetalistd = np.array([(traj_th1[i+1]-traj_th1[i])/dt, (traj_th2[i+1]-traj_th2[i])/dt, (traj_th3[i+1]-traj_th3[i])/dt, (traj_th4[i+1]-traj_th4[i])/dt],dtype=float)
+        ddthetalistd = np.array([(dthetalistd[0]-dthetalist[0])/dt, (dthetalistd[1]-dthetalist[1])/dt, (dthetalistd[2]-dthetalist[2])/dt, (dthetalistd[3]-dthetalist[3])/dt],dtype=float)
+
+        e = np.subtract(thetalistd, thetalist)
+        MassMatrix = mr.MassMatrix(thetalist, Mlist, Glist, Slist)
+        error = Kp * e + Ki * (np.array(eint) + e) \
+                + Kd * (np.subtract(dthetalistd, dthetalist))
+        # print('------------------')  
+        # print(np.array(eint) + e) 
+        # print(np.subtract(dthetalistd, dthetalist)) 
+        # print('------------------')       
+
+        
+        inv_dyn = np.array([mr.InverseDynamics(thetalist, dthetalist, ddthetalistd, g, \
+                            [0, 0, 0, 0, 0, 0], Mlist, Glist, Slist)]).T
+        torque = np.dot(MassMatrix,error)+inv_dyn       
+        print(torque)
+        # torquelist = torque.astype(np.float64)
+        # print(type(torquelist))
+        # print(type(torquelist[1]))
+        pub_2.publish(torque[1])
+        pub_3.publish(torque[2])
+        pub_4.publish(torque[3])
+        rate.sleep()
+
+def joint_torque():
+    q1, q2, q3, q4, torque = init_traj.joint_traj()
+    
+    rate = rospy.Rate(100)
+    
+    for i in range(0,len(torque)-1):
+        torque2 = torque[i][1]
+        torque3 = torque[i][2]
+        torque4 = torque[i][3]
+        pub_2.publish(torque2)
+        pub_3.publish(torque3)
+        pub_4.publish(torque4)
+        
+        rate.sleep()
+    
 
 
 # def callback(data):
@@ -105,67 +426,6 @@ def CTC(thetalist, dthetalist, thetalistd, dt, Mlist, Slist):
 #     print(torque_traj)
 
 #######################################################################################################
-
-
-m1 = 2.486
-m2 = 1.416
-m3 = 1.739
-m4 = 16.09
-
-L1 = 0.171
-L2 = 0.28
-L3 = 0.280
-L4 = 0.346
-
-eint = np.array([0.1, 0.1, 0.1, 0.1])
-g = np.array([0, 0, -9.8])
-
-G1 = np.diag([0.010267, 0.010267, 0.00666, m1, m1, m1]) #X
-G2 = np.diag([0.010192583, 0.002390605, 0.009599672, m2, m2, m2])
-G3 = np.diag([0.008595913, 0.002944951, 0.007917693, m3, m3, m3])
-G4 = np.diag([0.2715612, 0.123573848, 0.20661847, m4, m4, m4])
-
-Glist = np.array([G1, G2, G3, G4])
-
-Kp = 10
-Ki = 0.1
-Kd = 5
-
-def get_Mlist_Slist(thetalist):
-
-    theta_1 = thetalist[0]
-    theta_2 = thetalist[0] + thetalist[1]
-    theta_3 = thetalist[0] + thetalist[1] + thetalist[2]
-    theta_4 = thetalist[0] + thetalist[1] + thetalist[2] + thetalist[3]
-
-    M01 = np.array([[1, 0, 0,       0],
-                [0, 1, 0,       0],
-                [0, 0, 1,       0],
-                [0, 0, 0,       1]])
-    M12 = np.array([[1, 0, 0,        0],
-                    [0, 1, 0,       L1],
-                    [0, 0, 1,        0],
-                    [0, 0, 0,        1]])
-    M23 = np.array([[ 1, 0, 0,      -L2*np.cos(theta_2)],
-                    [ 0, 1, 0,      L2*np.sin(theta_2)],
-                    [ 0, 0, -1,       0],
-                    [ 0, 0, 0,       1]])
-    M34 = np.array([[1, 0, 0,       L2*np.cos(theta_3)],
-                    [0, 1, 0,       L2*np.sin(theta_3)],
-                    [0, 0, -1,      0],
-                    [0, 0, 0,       1]])
-    M45 = np.array([[1, 0, 0,       0],
-                    [0, 1, 0,      L4],
-                    [0, 0, 1,       0],
-                    [0, 0, 0,       1]])
-
-    Mlist = np.array([M01, M12, M23, M34, M45])
-    Slist = np.array([[0, 0, 1,      0, 0,     0],
-                        [0, 0, 1,   -L1 * np.sin(theta_1), L1 * np.cos(theta_1),     0],
-                        [0, 0, -1, L1*np.sin(theta_1) + L2 * np.sin(theta_2), -(L1 * np.cos(theta_1)+L2 * np.cos(theta_2)), 0],
-                        [0, 0, 1, -(L1*np.sin(theta_1) + L2 * np.sin(theta_2)+L3 * np.sin(theta_3)), L1 * np.cos(theta_1) + L2 * np.cos(theta_2)-L3 * np.cos(theta_3), 0]]).T
-
-    return Mlist, Slist
 
 #######################################################################################################
 
@@ -179,49 +439,48 @@ if __name__ == '__main__':
         gazebo_setting()
         RAD2DEG = 180/np.pi
 
-        ddt = 0.017
+        # ddt = 0.017
 
-        q1d = 0
-        q2d = 0.745239
-        q3d = -1.6307
-        q4d = 0.885463
-
-        thetalistd = np.array([0, q2d, q3d, q4d])
+        # q1d = 0
+        # q2d = 0.745239
+        # q3d = -1.6307
+        # q4d = 0.885463
+        
+        thetalist_des, h = get_deg(0.9)
+        # s0, z, theta_P = get_end_point(thetalistd[0], thetalistd[1], thetalistd[2], thetalistd[3])
+        # print('Start Calculating Horizon Trajectory!!')
+        # q1list, q2list,q3list, q4list= horizon_traj(h, s0, 0.03, thetalistd)
+        # q1list, q2list,q3list, q4list = init_traj.joint_traj()
+        # print('Calculate Horizon Trajectory!!')
+        # CTC_traj(q1list, q2list, q3list, q4list)
+        joint_torque()
+        
+        thetalist_prev, dthetalist_prev = get_cur_deg_vel()
         cur_time = time.time()    
         sec_time = time.time() 
+        dt = 0.015
 
         while True:
-            # rospy.Subscriber('Angle_Traj', Float64MultiArray,callback)
             last_time = cur_time
             cur_time = time.time()
             # sec_cur_time = time.time()
             dt = cur_time - last_time 
+            print('dt: ',dt)
             # sec =  sec_cur_time - sec_time
-
-            thetalist = get_cur_deg()
-            dthetalist = get_cur_vel()
-
-            theta_1 = 1.5708
-            theta_2 = 1.5708 + thetalist[1]
-            theta_3 = 1.5708 + thetalist[1] + thetalist[2]
-            theta_4 = 1.5708 + thetalist[1] + thetalist[2] + thetalist[3]
-            thetal = np.array([theta_1*RAD2DEG, theta_2*RAD2DEG, theta_3*RAD2DEG, theta_4*RAD2DEG])
-            Mlist, Slist = get_Mlist_Slist(thetalist)
-            torquelist = CTC(thetalist, dthetalist, thetalistd, ddt, Mlist, Slist)
-
-
-            print("thetalist: ", thetalist)
-            print(thetal)
-            print("dthetalist: ", dthetalist)
-            print("dt: ", dt)
-            print("torquelist: ", torquelist)
-            print('----------------------------------')
-
-            pub_2.publish(torquelist[1])
-            pub_3.publish(torquelist[2])
-            pub_4.publish(torquelist[3])
+            thetalist, dthetalist = get_cur_deg_vel()
+            print('thetalist: ', thetalist)
+            print('dthetalist: ', dthetalist)
+            
+            torque = CTC(thetalist_des,thetalist,thetalist_prev,dthetalist_prev, dt)
+            
+            thetalist_prev = thetalist
+            print('torque: ',torque)
             
             
+            pub_2.publish(torque[1])
+            pub_3.publish(torque[2])
+            pub_4.publish(torque[3])
+
             rate.sleep()
     except rospy.ROSInterruptException:
         pass

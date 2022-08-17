@@ -274,13 +274,24 @@ def init_pub():
 
     
 #######################################################################################################
-A, B, C, D = sep.Cal_Pitch_SS(0.615)
+# A, B, C, D = sep.Cal_Pitch_SS(0.615)
+
+A = np.array([[0,0,1,0],
+              [0,0,0,1],
+              [0,-98.25257286,0,0],
+              [0,98.75743634,0,0]])
+
+B = np.array([[0],[0],[82.31291912],[-48.05592186]])
+
+C = np.eye(4)
+
+D = np.array([[0], [0], [0], [0]])
 
 # q = [phi, theta, phi_dot, theta_dot]
-Q = sp.Matrix([ [0.3,    0,    0,    0],
-                [0,    0.01,    0,    0],
-                [0,    0,    0.1,    0],
-                [0,    0,    0,    0.01]])
+Q = sp.Matrix([ [1,    0,    0,    0],
+                [0,    1,    0,    0],
+                [0,    0,    1,    0],
+                [0,    0,    0,    1]])
 
 R = sp.Matrix([ [1] ])
 
@@ -342,17 +353,21 @@ if __name__ == '__main__':
             sec_cur_time = time.time()
             dt = cur_time - last_time 
             sec =  sec_cur_time - sec_time
+            
+            L1_x, L1_y, L1_z = get_link_ori(link_name_list[0], 'world')
+            link_vel_x, link_vel_y, link_vel_z = get_link_vel(link_name_list[0], 'world')
  
             wheel_ori_x, wheel_ori_y, wheel_ori_z = get_wheel_ori()
             wheel_vel_x, wheel_vel_y, wheel_vel_z = get_wheel_vel()
-            body_ori_x, body_ori_y, body_ori_z = get_body_ori()
-            body_vel_x, body_vel_y, body_vel_z = get_body_vel()
+            # body_ori_x, body_ori_y, body_ori_z = get_body_ori()
+            # body_vel_x, body_vel_y, body_vel_z = get_body_vel()
             
             # theta_P = get_theta_P()
 
-            x0 = np.array([wheel_ori_y,body_ori_y,wheel_vel_y,body_vel_y])
+            x0 = np.array([wheel_ori_y,L1_y,wheel_vel_y,link_vel_y])
 
             u = -K @ ( x0 )
+            print(u)
             pub_w.publish(u)
 
             # deg_store.append(theta_P*RAD2DEG)
@@ -360,7 +375,7 @@ if __name__ == '__main__':
             
             if loop_cnt % 10 == 0:
                 print('Wheel_velocity  (rad/s): ', wheel_vel_y)
-                print('Pitch             (deg): ', theta_P*RAD2DEG)
+                # print('Pitch             (deg): ', theta_P*RAD2DEG)
 
                 print('====================================')  
             

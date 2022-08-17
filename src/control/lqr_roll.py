@@ -136,11 +136,11 @@ def theta_target(gimbal_deg):
     
     return theta_target
 
-def callback(data):
-    global z_com
+# def callback(data):
+#     global z_com
     
-    CoMlist = data.data
-    z_com = CoMlist[0]
+#     CoMlist = data.data
+#     z_com = CoMlist[0]
 
 def print_graph():
 
@@ -158,8 +158,17 @@ def print_graph():
 
 #################################################################################################    
 
-A, B, C, D = ser.Cal_Roll_SS(z_com)
-    
+# A, B, C, D = ser.Cal_Roll_SS(z_com)
+A = np.array([[0,0,1,0],
+            [0,0,0,1],
+            [82.04066448,0,0,-1.91506379],
+            [0,0,497.19879333, 0]])
+
+B = np.array([[0],[0],[0],[84.03361345]])
+
+C = np.eye(4)
+
+D = np.array([[0], [0], [0], [0]])
 # q = [theta_R, theta_gb, theta_Rd, theta_gbd]
 Q = sp.Matrix([ [1,    0,    0,    0],
                 [0,    2,    0,    0],
@@ -211,7 +220,7 @@ if __name__ == '__main__':
         pub_Rgb = rospy.Publisher('/wheeled_inverted_pendulum/right_gimbal/command', Float64, queue_size=100)
         pub_Lfw = rospy.Publisher('/wheeled_inverted_pendulum/left_flywheel/command', Float64, queue_size=100)
         pub_Rfw = rospy.Publisher('/wheeled_inverted_pendulum/right_flywheel/command', Float64, queue_size=100)
-        rospy.Subscriber('CoM_Roll', Float64MultiArray, callback)
+        # rospy.Subscriber('CoM_Roll', Float64MultiArray, callback)
 
         gazebo_setting()
         
