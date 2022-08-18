@@ -100,9 +100,9 @@ def horizon_angle_traj(a, t, time_step,thetalistd, horizon_path, z_com):
     L3c = L3 - 0.18878
     L4c = 0.17188
     
-    q2list = np.array([thetalistd[0]])
-    q3list = np.array([thetalistd[1]])
-    q4list = np.array([thetalistd[2]])
+    q2list = np.array([thetalistd[0]],dtype=float)
+    q3list = np.array([thetalistd[1]],dtype=float)
+    q4list = np.array([thetalistd[2]],dtype=float)
     
     for i in range(0, len(time)-1):
 

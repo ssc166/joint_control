@@ -1,1 +1,0 @@
-Matrix([[0], [-g*(L_1*m_b + L_1c*m_1)*theta_1(t)], [-L_b*g*m_b*theta_2(t)]])
