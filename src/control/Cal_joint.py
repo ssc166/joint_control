@@ -62,25 +62,31 @@ def get_end_point(q2, q3, q4):
     L3c = L3 - 0.18878
     L4c = 0.17188
 
+    I_2 =0.009599672
+    I_3 =0.007917693
+    I_4 =0.257336003
+
     theta_2 = np.pi/2 + q2
     theta_3 = np.pi/2 + q2 + q3
     theta_4 = np.pi/2 + q2 + q3 + q4
 
-    x = L2 * sp.cos(theta_2) + L3 * sp.cos(theta_3) + L4 * sp.cos(theta_4)
-    z = L2 * sp.sin(theta_2) + L3 * sp.sin(theta_3) + L4 * sp.sin(theta_4)
+    x = L2 * np.cos(theta_2) + L3 * np.cos(theta_3) + L4 * np.cos(theta_4)
+    z = L2 * np.sin(theta_2) + L3 * np.sin(theta_3) + L4 * np.sin(theta_4)
 
-    x_2 = L2c * sp.cos(theta_2)
-    x_3 = L2 * sp.cos(theta_2) + L3c*sp.cos(theta_3)
-    x_4 = L2 * sp.cos(theta_2) + L3 * sp.cos(theta_3) + L4c * sp.cos(theta_4)
+    x_2 = L2c * np.cos(theta_2)
+    x_3 = L2 * np.cos(theta_2) + L3c*np.cos(theta_3)
+    x_4 = L2 * np.cos(theta_2) + L3 * np.cos(theta_3) + L4c * np.cos(theta_4)
     x_com = (m2*x_2 + m3*x_3+ m4*x_4) / (m2 + m3 + m4)
 
-    z_2c = L2c * sp.sin(theta_2)
-    z_3c = L2 * sp.sin(theta_2) + L3c*sp.sin(theta_3)
-    z_4c = L2 * sp.sin(theta_2) + L3 * sp.sin(theta_3) + L4c * sp.sin(theta_4)
+    z_2c = L2c * np.sin(theta_2)
+    z_3c = L2 * np.sin(theta_2) + L3c*np.sin(theta_3)
+    z_4c = L2 * np.sin(theta_2) + L3 * np.sin(theta_3) + L4c * np.sin(theta_4)
 
     z_com = (m2*z_2c + m3*z_3c + m4*z_4c) / (m2 + m3 + m4)
     theta_P = np.arctan(float(x_com)/float(z_com))
-    return x,z, x_com, z_com, theta_P
+
+    I_by =  I_2 + I_3 + I_4 +  m2*(z_com-z_2c)**2 +   m3*(z_com-z_3c)**2 +  m4*(z_com-z_4c)**2 
+    return x,z, x_com, z_com, I_by, theta_P
 
 def horizon_angle_traj(a, t, time_step,thetalistd, horizon_path, z_com):
     time, traj = utils.Trapezoidal_Traj_Gen_Given_Amax_and_T(a,t,time_step)
@@ -159,17 +165,17 @@ def end_traj(q2list, q3list, q4list):
     theta_30 = np.pi/2 + q2list[0] + q3list[0]
     theta_40 = np.pi/2 + q2list[0] + q3list[0] + q4list[0]
 
-    x = L2 * sp.cos(float(theta_20)) + L3 * sp.cos(float(theta_30)) + L4 * sp.cos(float(theta_40))
-    z = L2 * sp.sin(float(theta_20)) + L3 * sp.sin(float(theta_30)) + L4 * sp.sin(float(theta_40))
+    x = L2 * np.cos(float(theta_20)) + L3 * np.cos(float(theta_30)) + L4 * np.cos(float(theta_40))
+    z = L2 * np.sin(float(theta_20)) + L3 * np.sin(float(theta_30)) + L4 * np.sin(float(theta_40))
 
-    x_2 = L2c * sp.cos(float(theta_20))
-    x_3 = L2 * sp.cos(float(theta_20)) + L3c*sp.cos(float(theta_30))
-    x_4 = L2 * sp.cos(float(theta_20)) + L3 * sp.cos(float(theta_30)) + L4c * sp.cos(float(theta_40))
+    x_2 = L2c * np.cos(float(theta_20))
+    x_3 = L2 * np.cos(float(theta_20)) + L3c*np.cos(float(theta_30))
+    x_4 = L2 * np.cos(float(theta_20)) + L3 * np.cos(float(theta_30)) + L4c * np.cos(float(theta_40))
     x_com = (m2*x_2 + m3*x_3+ m4*x_4) / (m2 + m3 + m4)
 
-    z_2c = L2c * sp.sin(float(theta_20))
-    z_3c = L2 * sp.sin(float(theta_20)) + L3c*sp.sin(float(theta_30))
-    z_4c = L2 * sp.sin(float(theta_20)) + L3 * sp.sin(float(theta_30)) + L4c * sp.sin(float(theta_40))
+    z_2c = L2c * np.sin(float(theta_20))
+    z_3c = L2 * np.sin(float(theta_20)) + L3c*np.sin(float(theta_30))
+    z_4c = L2 * np.sin(float(theta_20)) + L3 * np.sin(float(theta_30)) + L4c * np.sin(float(theta_40))
 
     z_com = (m2*z_2c + m3*z_3c + m4*z_4c) / (m2 + m3 + m4)
     theta_P = np.arctan(float(x_com)/float(z_com))
@@ -192,17 +198,17 @@ def end_traj(q2list, q3list, q4list):
         theta_3 = np.pi/2 + q2list[i] + q3list[i]
         theta_4 = np.pi/2 + q2list[i] + q3list[i] + q4list[i]
 
-        x = L2 * sp.cos(float(theta_2)) + L3 * sp.cos(float(theta_3)) + L4 * sp.cos(float(theta_4))
-        z = L2 * sp.sin(float(theta_2)) + L3 * sp.sin(float(theta_3)) + L4 * sp.sin(float(theta_4))
+        x = L2 * np.cos(float(theta_2)) + L3 * np.cos(float(theta_3)) + L4 * np.cos(float(theta_4))
+        z = L2 * np.sin(float(theta_2)) + L3 * np.sin(float(theta_3)) + L4 * np.sin(float(theta_4))
 
-        x_2 = L2c * sp.cos(float(theta_2))
-        x_3 = L2 * sp.cos(float(theta_2)) + L3c*sp.cos(float(theta_3))
-        x_4 = L2 * sp.cos(float(theta_2)) + L3 * sp.cos(float(theta_3)) + L4c * sp.cos(float(theta_4))
+        x_2 = L2c * np.cos(float(theta_2))
+        x_3 = L2 * np.cos(float(theta_2)) + L3c*np.cos(float(theta_3))
+        x_4 = L2 * np.cos(float(theta_2)) + L3 * np.cos(float(theta_3)) + L4c * np.cos(float(theta_4))
         x_com = (m2*x_2 + m3*x_3+ m4*x_4) / (m2 + m3 + m4)
 
-        z_2c = L2c * sp.sin(float(theta_2))
-        z_3c = L2 * sp.sin(float(theta_2)) + L3c*sp.sin(float(theta_3))
-        z_4c = L2 * sp.sin(float(theta_2)) + L3 * sp.sin(float(theta_3)) + L4c * sp.sin(float(theta_4))
+        z_2c = L2c * np.sin(float(theta_2))
+        z_3c = L2 * np.sin(float(theta_2)) + L3c*np.sin(float(theta_3))
+        z_4c = L2 * np.sin(float(theta_2)) + L3 * np.sin(float(theta_3)) + L4c * np.sin(float(theta_4))
 
         z_com = (m2*z_2c + m3*z_3c + m4*z_4c) / (m2 + m3 + m4)
         

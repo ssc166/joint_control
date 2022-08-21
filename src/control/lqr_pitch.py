@@ -95,7 +95,7 @@ def get_wheel_state(wheel_name):
     
     return wheel_state
     
-def get_wheel_ori():
+def get_wheel_param():
     global wheel_state
     
     wheel_state = get_wheel_state(wheel_name)
@@ -104,19 +104,12 @@ def get_wheel_ori():
     wheel_ori_x = X
     wheel_ori_y = Y
     wheel_ori_z = Z
-    
-    return wheel_ori_x, wheel_ori_y, wheel_ori_z
-
-def get_wheel_vel():
-    global wheel_state
-    
-    wheel_state = get_wheel_state(wheel_name)
-    
     wheel_vel_x = wheel_state.link_state.twist.angular.x
     wheel_vel_y = wheel_state.link_state.twist.angular.y
     wheel_vel_z = wheel_state.link_state.twist.angular.z
-    
-    return wheel_vel_x, wheel_vel_y, wheel_vel_z
+
+    return wheel_ori_x, wheel_ori_y, wheel_ori_z, wheel_vel_x, wheel_vel_y, wheel_vel_z
+
 
 def linvel2wheelvel(linvel):
     wheel_rad = 0.138/2
@@ -257,20 +250,20 @@ def init_lqr():
         Klist = np.vstack((Klist, K))
     return Klist
 
-def init_pub():
-    Klist = init_lqr()
+# def init_pub():
+#     Klist = init_lqr()
     
-    for i in range(len(Klist)-1):
+#     for i in range(len(Klist)-1):
         
-        wheel_ori_x, wheel_ori_y, wheel_ori_z = get_wheel_ori()
-        wheel_vel_x, wheel_vel_y, wheel_vel_z = get_wheel_vel()
-        body_ori_x, body_ori_y, body_ori_z = get_body_ori()
-        body_vel_x, body_vel_y, body_vel_z = get_body_vel()
+#         wheel_ori_x, wheel_ori_y, wheel_ori_z = get_wheel_ori()
+#         wheel_vel_x, wheel_vel_y, wheel_vel_z = get_wheel_vel()
+#         body_ori_x, body_ori_y, body_ori_z = get_body_ori()
+#         body_vel_x, body_vel_y, body_vel_z = get_body_vel()
         
-        x0 = np.array([wheel_ori_y,body_ori_y,wheel_vel_y,body_vel_y])
+#         x0 = np.array([wheel_ori_y,body_ori_y,wheel_vel_y,body_vel_y])
 
-        u = -Klist[i] @ ( x0 )
-        pub_w.publish(u)
+#         u = -Klist[i] @ ( x0 )
+#         pub_w.publish(u)
 
     
 #######################################################################################################
@@ -357,8 +350,7 @@ if __name__ == '__main__':
             L1_x, L1_y, L1_z = get_link_ori(link_name_list[0], 'world')
             link_vel_x, link_vel_y, link_vel_z = get_link_vel(link_name_list[0], 'world')
  
-            wheel_ori_x, wheel_ori_y, wheel_ori_z = get_wheel_ori()
-            wheel_vel_x, wheel_vel_y, wheel_vel_z = get_wheel_vel()
+            wheel_ori_x, wheel_ori_y, wheel_ori_z, wheel_vel_x, wheel_vel_y, wheel_vel_z = get_wheel_param()
             # body_ori_x, body_ori_y, body_ori_z = get_body_ori()
             # body_vel_x, body_vel_y, body_vel_z = get_body_vel()
             

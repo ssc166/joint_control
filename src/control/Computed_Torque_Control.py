@@ -11,6 +11,7 @@ import modern_robotics as mr
 import time
 import os
 import init_traj
+import Cal_joint as cj
 
 
 def gazebo_setting():
@@ -62,88 +63,25 @@ def get_cur_deg_vel():
  
     return thetalist, dthetalist
 
-# def get_cur_vel():
-
-#     L1_x, L1_y, L1_z = get_link_vel(link_name_list[0], 'world')
-#     L2_x, L2_y, L2_z = get_link_vel(link_name_list[1], 'world')
-#     L3_x, L3_y, L3_z = get_link_vel(link_name_list[2], 'world')
-#     L4_x, L4_y, L4_z = get_link_vel(link_name_list[3], 'world')
-
-#     dthetalist = np.array([L1_y, L2_y, L3_y, L4_y])
- 
-#     return dthetalist    
-
-def get_deg(h):
-    m2 = 1.416
-    m3 = 1.739
-    m4 = 16.09
-
-    L1 = 0.171
-    L2 = 0.28
-    L3 = 0.28
-    L4 = 0.346
-
-    L2c = L2 - 0.045289
-    L3c = L3 - 0.18878
-
-    theta_3, q2 = sp.symbols('theta_3, q2')
+def get_wheel_state(wheel_name):
+    wheel_state = get_state(link_name = wheel_name)
     
-    A = (h-L1-L4)/L2
-    B = m2*L2c + m3*L2+m4*L2
-    C = m3*L3c + m4*L3
+    return wheel_state
     
-    f1 = sp.Eq(sp.cos(q2)+sp.sin(theta_3),float(A))
-    f2 = sp.Eq(-float(B)*sp.sin(q2)+float(C)*sp.cos(theta_3),0)
-    sol = sp.solve([f1,f2])
-    solu = sol[0]
+def get_wheel_param():
+    global wheel_state
+    
+    wheel_state = get_wheel_state(wheel_name)
+    
+    X, Y, Z = utils.quaternion_to_euler_angle(wheel_state.link_state.pose.orientation)
+    wheel_ori_x = X
+    wheel_ori_y = Y
+    wheel_ori_z = Z
+    wheel_vel_x = wheel_state.link_state.twist.angular.x
+    wheel_vel_y = wheel_state.link_state.twist.angular.y
+    wheel_vel_z = wheel_state.link_state.twist.angular.z
 
-    q2 = solu[q2]
-    theta_3 = solu[theta_3]
-    q1 = np.pi/2
-    q3 = theta_3-q1-q2
-    q4 = -(q2+q3)
-
-    thetalistd = np.array([q1, q2, q3,q4])
-    return thetalistd, h
-
-def get_end_point(q1, q2, q3, q4):
-    m1 = 2.486 + 0.3
-    m2 = 1.416
-    m3 = 1.739
-    m4 = 16.09
-
-    L1 = 0.171
-    L2 = 0.28
-    L3 = 0.28
-    L4 = 0.346
-
-    L1c = L1
-    L2c = L2 - 0.045289
-    L3c = L3 - 0.18878
-    L4c = 0.158527
-
-    theta_1 = float(q1)
-    theta_2 = float(q1 + q2)
-    theta_3 = float(q1 + q2 + q3)
-    theta_4 = float(q1 + q2 + q3 + q4)
-
-    x = L1 * np.cos(theta_1) + L2 * np.cos(theta_2) + L3 * np.cos(theta_3) + L4 * np.cos(theta_4)
-    z = L1 * np.sin(theta_1) + L2 * np.sin(theta_2) + L3 * np.sin(theta_3) + L4 * np.sin(theta_4)
-
-    x_1 = L1c * np.cos(theta_1)
-    x_2 = L1 * np.cos(theta_1) + L2c * np.cos(theta_2)
-    x_3 = L1 * np.cos(theta_1) + L2 * np.cos(theta_2) + L3c*np.cos(theta_3)
-    x_4 = L1 * np.cos(theta_1) + L2 * np.cos(theta_2) + L3 * np.cos(theta_3) + L4c * np.cos(theta_4)
-    x_com = (m1*x_1 + m2*x_2 + m3*x_3+ m4*x_4) / (m1 + m2 + m3 + m4)
-
-    z_1c = L1c * np.sin(theta_1)
-    z_2c = L1 * np.sin(theta_1) + L2c * np.sin(theta_2)
-    z_3c = L1 * np.sin(theta_1) + L2 * np.sin(theta_2) + L3c*np.sin(theta_3)
-    z_4c = L1 * np.sin(theta_1) + L2 * np.sin(theta_2) + L3 * np.sin(theta_3) + L4c * np.sin(theta_4)
-
-    z_com = (m1*z_1c + m2*z_2c + m3*z_3c + m4*z_4c) / (m1 + m2 + m3 + m4)
-    theta_P = np.arctan(float(x_com)/float(z_com))
-    return x,z, theta_P
+    return wheel_ori_x, wheel_ori_y, wheel_ori_z, wheel_vel_x, wheel_vel_y, wheel_vel_z
 
 def horizon_traj(h_cur, horizon_cur, horizon_end, thetalistd):
     time, traj = utils.Trapezoidal_Traj_Gen_Given_Amax_and_T(1,2,0.03)
@@ -193,8 +131,6 @@ def horizon_traj(h_cur, horizon_cur, horizon_end, thetalistd):
         q2list = np.vstack((q2list,q2))
         q3list = np.vstack((q3list,q3))
         q4list = np.vstack((q4list,q4))
-
-    
 
     return q1list, q2list, q3list, q4list
 
@@ -418,12 +354,15 @@ def joint_torque():
         
         rate.sleep()
     
+get_state = rospy.ServiceProxy("/gazebo/get_link_state", GetLinkState)
 
+wheel_state = []
+wheel_name = 'wheel_link'
+wheel_name_list = [wheel_name]
 
-# def callback(data):
-    
-#     torque_traj = data.data
-#     print(torque_traj)
+deg_store = []
+sec_store = []
+loop_cnt = 0
 
 #######################################################################################################
 
@@ -432,10 +371,11 @@ def joint_torque():
 if __name__ == '__main__':
     try:  
         rospy.init_node('CTC_Calculator', anonymous=True)
+        pub_w = rospy.Publisher('/wheeled_inverted_pendulum/wheel/command', Float64, queue_size=100)
         pub_2 = rospy.Publisher('/wheeled_inverted_pendulum/ankle_pitch/command', Float64, queue_size=100)
         pub_3 = rospy.Publisher('/wheeled_inverted_pendulum/knee/command', Float64, queue_size=100)
         pub_4 = rospy.Publisher('/wheeled_inverted_pendulum/hip_pitch/command', Float64, queue_size=100)
-        rate = rospy.Rate(1000)
+        rate = rospy.Rate(100)
         gazebo_setting()
         RAD2DEG = 180/np.pi
 
@@ -446,19 +386,20 @@ if __name__ == '__main__':
         # q3d = -1.6307
         # q4d = 0.885463
         
-        thetalist_des, h = get_deg(0.9)
+        thetalist_des, h = cj.get_init_pos(0.9)
+        x,z, x_com, z_com, I_by, theta_P = cj.get_end_point(thetalist_des[0], thetalist_des[1], thetalist_des[2])
         # s0, z, theta_P = get_end_point(thetalistd[0], thetalistd[1], thetalistd[2], thetalistd[3])
         # print('Start Calculating Horizon Trajectory!!')
         # q1list, q2list,q3list, q4list= horizon_traj(h, s0, 0.03, thetalistd)
         # q1list, q2list,q3list, q4list = init_traj.joint_traj()
         # print('Calculate Horizon Trajectory!!')
         # CTC_traj(q1list, q2list, q3list, q4list)
-        joint_torque()
+        # joint_torque()
         
-        thetalist_prev, dthetalist_prev = get_cur_deg_vel()
+        # thetalist_prev, dthetalist_prev = get_cur_deg_vel()
         cur_time = time.time()    
         sec_time = time.time() 
-        dt = 0.015
+        # dt = 0.015
 
         while True:
             last_time = cur_time
@@ -468,18 +409,31 @@ if __name__ == '__main__':
             print('dt: ',dt)
             # sec =  sec_cur_time - sec_time
             thetalist, dthetalist = get_cur_deg_vel()
-            print('thetalist: ', thetalist)
-            print('dthetalist: ', dthetalist)
+            wheel_ori_x, wheel_ori_y, wheel_ori_z, wheel_vel_x, wheel_vel_y, wheel_vel_z = get_wheel_param()
             
-            torque = CTC(thetalist_des,thetalist,thetalist_prev,dthetalist_prev, dt)
+            x,z, x_com, z_com, I_by, theta_P = cj.get_end_point(thetalist[1], thetalist[2], thetalist[3])
+            # torque = CTC(thetalist_des,thetalist,thetalist_prev,dthetalist_prev, dt)
             
-            thetalist_prev = thetalist
-            print('torque: ',torque)
+            # thetalist_prev = thetalist
+            # print('torque: ',torque)
+            x0 = np.array([wheel_ori_y,thetalist[0], theta_P,wheel_vel_y,dthetalist[0],])
+            u = -K @ ( x0 )
+
+            pub_2.publish(thetalist_des[0])
+            pub_3.publish(thetalist_des[1])
+            pub_4.publish(thetalist_des[2])
+            pub_w.publish(u)
+
+            if loop_cnt % 10 == 0:
+                print('thetalist: ', thetalist)
+                print('dthetalist: ', dthetalist)
+                print('Wheel_velocity  (rad/s): ', wheel_vel_y)
+                # print('Pitch             (deg): ', theta_P*RAD2DEG)
+
+                print('====================================')  
             
             
-            pub_2.publish(torque[1])
-            pub_3.publish(torque[2])
-            pub_4.publish(torque[3])
+            loop_cnt= loop_cnt + 1
 
             rate.sleep()
     except rospy.ROSInterruptException:
