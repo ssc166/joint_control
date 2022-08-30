@@ -1,8 +1,8 @@
 wheeled_inverted_pendulum:
   #Publish all joint states -----------------------------------
-  # joint_state_controller:
-  #   type: joint_state_controller/JointStateController
-  #   publish_rate: 100
+  joint_state_controller:
+    type: joint_state_controller/JointStateController
+    publish_rate: 100
 
   
 
@@ -14,20 +14,20 @@ wheeled_inverted_pendulum:
       Right_gimbal_joint:   {p: 0.1, i: 0, d: 0}
       wheel_joint:          {p: 100.0, i: 16, d: 20}
 
-      hip_pitch_joint:      {p: 300, i: 15, d: 100}
-      knee_joint:           {p: 300, i: 15, d: 100}
-      ankle_pitch_joint:    {p: 300, i: 15, d: 100}
+      # hip_pitch_joint:      {p: 300, i: 150, d: 200}
+      # knee_joint:           {p: 300, i: 150, d: 200}
+      ankle_pitch_joint:    {p: 50.0, i: 16, d: 20}
   
-  hip_pitch:
-    type: position_controllers/JointPositionController
-    joint: hip_pitch_joint
+  # hip_pitch:
+  #   type: position_controllers/JointPositionController
+  #   joint: hip_pitch_joint
   
-  knee:
-    type: position_controllers/JointPositionController
-    joint: knee_joint
+  # knee:
+  #   type: position_controllers/JointPositionController
+  #   joint: knee_joint
 
   ankle_pitch:
-    type: position_controllers/JointPositionController
+    type: effort_controllers/JointEffortController
     joint: ankle_pitch_joint
 
   left_flywheel:

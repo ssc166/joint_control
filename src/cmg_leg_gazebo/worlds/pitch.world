@@ -90,7 +90,7 @@
     </spherical_coordinates>
     <model name='Untitled'>
       <pose>0 0 0 0 -0 0</pose>
-      <link name='Wall_0'>
+      <!-- <link name='Wall_0'>
         <collision name='Wall_0_Collision'>
           <geometry>
             <box>
@@ -185,7 +185,7 @@
         <self_collide>0</self_collide>
         <enable_wind>0</enable_wind>
         <kinematic>0</kinematic>
-      </link>
+      </link> -->
       <static>1</static>
     </model>
     <state world_name='default'>
@@ -225,7 +225,7 @@
     </state>
     <gui fullscreen='0'>
       <camera name='user_camera'>
-        <pose>0 -6 1 0 0.0 1.57</pose>
+        <pose>0 -3 0.7 0 0.0 1.57</pose>
         <view_controller>orbit</view_controller>
         <projection_type>perspective</projection_type>
       </camera>

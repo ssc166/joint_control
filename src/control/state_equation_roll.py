@@ -21,12 +21,12 @@ def Cal_Roll_SS(z):
     qd = q.diff()
     qdd = qd.diff()
 
-    u = sp.Matrix([V])
+    u = sp.Matrix([T_gb])
 
     L = I_fy * w / 2
 
     tau = sp.Matrix([[I_bx*theta_Rdd - m_all*g*l*sp.sin(theta_R) + 2*L*theta_gbd*sp.cos(theta_gb)],
-                    [2*I_fx*theta_gbdd - 2*L*theta_Rd*sp.cos(theta_gb) - T_gb]])
+                    [I_fx*theta_gbdd -  L*theta_Rd*sp.cos(theta_gb) - T_gb]])
     eq_point = {sp.sin(theta_gb):theta_gb, sp.cos(theta_gb):1,sp.sin(theta_R):theta_R, sp.cos(theta_R):1,theta_gbd**2:0 ,theta_Rd**2:0}
 
     tau_eq = sp.simplify(tau.subs(eq_point))

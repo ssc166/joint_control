@@ -13,6 +13,8 @@ import pylab as pl
 import control
 import matplotlib.pyplot as plt
 import state_equation_roll as ser
+import WIP_utils as utils
+
 
 def gazebo_setting():
     os.system('rosservice call /gazebo/set_physics_properties "{time_step: 0.001, max_update_rate: 1000.0, gravity: {x: 0.0, y: 0.0, z: -9.8}, ode_config: {auto_disable_bodies: False, sor_pgs_precon_iters: 0, sor_pgs_iters: 200, sor_pgs_w: 1.0, sor_pgs_rms_error_tol: 0.0, contact_surface_layer: 0.001, contact_max_correcting_vel: 100.0, cfm: 0.0, erp: 0.2, max_contacts: 20}}"')
@@ -103,7 +105,7 @@ def get_link_state(link_name_main, reference_frame):
     
     return link_state
 
-def get_link_ori(link_name_main, reference_frame):
+def get_link_param(link_name_main, reference_frame):
     
     global link_state
     
@@ -113,19 +115,29 @@ def get_link_ori(link_name_main, reference_frame):
     link_ori_x = X
     link_ori_y = Y
     link_ori_z = Z
-     
-    return link_ori_x, link_ori_y, link_ori_z
-
-def get_link_vel(link_name_main, reference_frame):
     
-    global link_state
-    
-    link_state = get_link_state(link_name_main, reference_frame)
     link_vel_x = link_state.link_state.twist.angular.x
     link_vel_y = link_state.link_state.twist.angular.y
     link_vel_z = link_state.link_state.twist.angular.z
+     
+    return link_ori_x, link_vel_x
+
+
+def get_body_param():
+    global body_state
     
-    return link_vel_x, link_vel_y, link_vel_z
+    body_state = get_model_state(body_name)
+    
+    X, Y, Z = utils.quaternion_to_euler_angle(body_state.pose.orientation)
+    body_ori_x = X
+    body_ori_y = Y
+    body_ori_z = Z
+    
+    body_vel_x = body_state.twist.angular.x
+    body_vel_y = body_state.twist.angular.y
+    body_vel_z = body_state.twist.angular.z
+    
+    return body_ori_x,body_vel_x
 
 def theta_target(gimbal_deg):
     
@@ -196,7 +208,7 @@ Left_flywheel_name = 'Left_flywheel'
 Right_flywheel_name = 'Right_flywheel'
 gimbal_name_list = [Left_gimbal_name, Right_gimbal_name, Left_flywheel_name, Right_flywheel_name]
 
-mid_name = 'hip_link'
+mid_name = 'knee_ankle_link'
 low_name = 'ankle_roll_yaw_link'
 top_name = 'cmg'
 link_name_list = [mid_name, low_name, top_name]
@@ -248,17 +260,16 @@ if __name__ == '__main__':
             dt = cur_time - last_time 
             sec =  sec_cur_time - sec_time
             
-            gimbal_ori_left_x, gimbal_ori_left_y, gimbal_ori_left_z = get_link_ori(gimbal_name_list[0], link_name_list[2])
-            gimbal_vel_left_x, gimbal_vel_left_y, gimbal_vel_left_z= get_link_vel(gimbal_name_list[0], link_name_list[2])
-            gimbal_ori_right_x, gimbal_ori_right_y, gimbal_ori_right_z = get_link_ori(gimbal_name_list[1], link_name_list[2])
-            gimbal_vel_right_x, gimbal_vel_right_y, gimbal_vel_right_z= get_link_vel(gimbal_name_list[1], link_name_list[2])
+            # gimbal_ori_left_x, gimbal_ori_left_y, gimbal_ori_left_z = get_link_ori(gimbal_name_list[0], link_name_list[2])
+            # gimbal_vel_left_x, gimbal_vel_left_y, gimbal_vel_left_z= get_link_vel(gimbal_name_list[0], link_name_list[2])
+            link_ori_x, link_vel_x = get_link_param(gimbal_name_list[1], link_name_list[0])
                         
-            link_ori_x, link_ori_y, link_ori_z = get_link_ori(link_name_list[2], 'world')
-            link_vel_x, link_vel_y, link_vel_z = get_link_vel(link_name_list[2], 'world')
-            
-            x0 = np.array([link_ori_x, gimbal_ori_right_z, link_vel_x, gimbal_vel_right_z])
+            # link_ori_x, link_ori_y, link_ori_z = get_link_ori(link_name_list[2], 'world')
+            # link_vel_x, link_vel_y, link_vel_z = get_link_vel(link_name_list[2], 'world')
+            body_ori_x,body_vel_x = get_body_param()
+            x0 = np.array([body_ori_x, link_ori_x, body_vel_x, link_vel_x])
             xd = np.array([0, 0, 0, 0])
-            
+            # print(x0)
             u_R = - K @ (x0 - xd) 
             
             pub_Rgb.publish(u_R)
@@ -267,13 +278,13 @@ if __name__ == '__main__':
             # sec_store.append(sec)
             
             if loop_cnt % 10 == 0:
-                flywheel_vel_x, flywheel_vel_y, flywheel_vel_z= get_link_vel(gimbal_name_list[2], gimbal_name_list[0])
+                # flywheel_vel_x, flywheel_vel_y, flywheel_vel_z= get_link_param(gimbal_name_list[2], gimbal_name_list[0])
                 
-                print('Gimbal_angle_r      (deg): ', gimbal_ori_right_z*RAD2DEG)
-                print('Gimbal_angle_l      (deg): ', gimbal_ori_left_z*RAD2DEG)
-                print('FLywheel_velocity (rad/s): ', abs(flywheel_vel_y))
-                print('Roll                (deg): ', link_ori_x*RAD2DEG)
-                print('Yaw                 (deg): ', link_ori_z*RAD2DEG)
+                print('Gimbal_angle_r      (deg): ', link_ori_x*RAD2DEG)
+                # print('Gimbal_angle_l      (deg): ', gimbal_ori_left_z*RAD2DEG)
+                # print('FLywheel_velocity (rad/s): ', abs(flywheel_vel_y))
+                print('Roll                (deg): ', body_ori_x*RAD2DEG)
+                # print('Yaw                 (deg): ', link_ori_z*RAD2DEG)
                 print('====================================')
 
             loop_cnt= loop_cnt + 1

@@ -18,7 +18,7 @@
   </include>
 
   <!-- Load the URDF into ROS parameter server -->
-  <param name="robot_description" textfile="$(find cmg_leg_description)/urdf/robot.urdf"/>
+  <param name="robot_description" textfile="$(find cmg_leg_description)/urdf/cmg_joint.urdf"/>
   <!-- <param name="robot_description" textfile="$(find cmg_leg_description)/urdf/robot.sdf"/> -->
 
   <!-- Run a python script to the send a service call to gazebo_ros to spawn a URDF robot -->
@@ -28,7 +28,7 @@
         args="-urdf -x 0 -y 0 -z 0 -model wheeled_inverted_pendulum -param robot_description"/>
 
   <!-- Run controller utils -->
-  <rosparam file="$(find cmg_leg_gazebo)/config/controller_roll.yaml" command="load"/>
+  <rosparam file="$(find cmg_leg_gazebo)/config/controller.yaml" command="load"/>
 
 
   <!-- ros_control robotis manipulator launch file -->
@@ -39,19 +39,18 @@
         respawn="false"
         output="screen" 
         ns="/wheeled_inverted_pendulum" 
-        args=" wheel hip_pitch knee ankle_pitch right_gimbal right_flywheel left_flywheel"/>
+        args=" wheel ankle_pitch right_gimbal right_flywheel left_flywheel"/>
   <!-- joint_state_controller hip_roll hip_pitch knee ankle_pitch ankle_roll ankle_yaw wheel left_gimbal right_gimbal right_flywheel left_flywheel  -->
   <!-- hip_roll hip_pitch knee ankle_pitch ankle_roll ankle_yaw wheel left_gimbal right_gimbal right_flywheel left_fly -->
   <!--node name="omx_gripper_sub_publisher" pkg="omni_manipulator_gazebo" type="omx_gripper_sub_publisher" output="screen"/!-->
   
   <!-- convert joint states to TF transforms for rviz, etc -->
-  <!-- <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="false" output="screen"> 
-     <remap from="/joint_states" to="/joint_states" />
-  </node>  -->
+  <!-- <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="False" output="screen"/>  -->
 
   <!-- Publish joint values -->
   <!-- <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" /> -->
   
+  <!-- <node name="rviz" pkg="rviz" type="rviz" /> -->
   <!-- Joystick node -->
   <!-- <node name="joy" pkg="joy" type="joy_node"/> -->
 
