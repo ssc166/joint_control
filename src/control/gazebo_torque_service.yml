@@ -1,0 +1,26 @@
+rosservice call /gazebo/apply_body_wrench "body_name: 'wheeled_inverted_pendulum::knee_ankle_link'
+reference_frame: 'world'
+reference_point: {x: 0, y: 0, z: 0.845}
+wrench:
+  force: {x: 0.0, y: -20.0, z: 0.0}
+  torque: {x: 0.0, y: 0.0, z: 0.0}
+start_time: {secs: 0, nsecs: 0}
+duration: {secs: 0, nsecs: 100000000}"
+
+rosservice call /gazebo/apply_body_wrench "body_name: 'wheeled_inverted_pendulum::knee_ankle_link'
+reference_frame: 'world'
+reference_point: {x: -0.42, y: 0.0, z: 0.6}
+wrench:
+  force: {x: -15.1, y: 0.0, z: -13.5}
+  torque: {x: 0.0, y: 0.0, z: 0.0}
+start_time: {secs: 0, nsecs: 0}
+duration: {secs: 0, nsecs: 100000000}"
+
+rosservice call /gazebo/apply_body_wrench "body_name: 'wheeled_inverted_pendulum::cmg'
+reference_frame: 'world'
+reference_point: {x: 0.0, y: 0.0, z: 1.029}
+wrench:
+  force: {x: -20.0, y: 10.0, z: 0.0}
+  torque: {x: 0.0, y: 0.0, z: 0.0}
+start_time: {secs: 0, nsecs: 0}
+duration: {secs: 0, nsecs: 100000000}"

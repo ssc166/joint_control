@@ -1,0 +1,51 @@
+wheeled_inverted_pendulum:
+  #Publish all joint states -----------------------------------
+  joint_state_controller:
+    type: joint_state_controller/JointStateController
+    publish_rate: 100
+
+  
+
+  gazebo_ros_control:
+    pid_gains:
+      Left_flywheel_joint:  {p: 1.0, i: 0.0, d: 0.0}
+      Right_flywheel_joint: {p: 1.0, i: 0.0, d: 0.0}
+      Left_gimbal_joint:    {p: 100, i: 0, d: 0}
+      Right_gimbal_joint:   {p: 0.1, i: 0, d: 0}
+      wheel_joint:          {p: 100.0, i: 16, d: 20}
+
+      # hip_pitch_joint:      {p: 300, i: 150, d: 200}
+      # knee_joint:           {p: 300, i: 150, d: 200}
+      ankle_pitch_joint:    {p: 50.0, i: 16, d: 20}
+  
+  # hip_pitch:
+  #   type: position_controllers/JointPositionController
+  #   joint: hip_pitch_joint
+  
+  # knee:
+  #   type: position_controllers/JointPositionController
+  #   joint: knee_joint
+
+  ankle_pitch:
+    type: effort_controllers/JointEffortController
+    joint: ankle_pitch_joint
+
+  left_flywheel:
+    type: velocity_controllers/JointVelocityController
+    joint: Left_flywheel_joint
+
+  right_gimbal:
+    type: effort_controllers/JointEffortController
+    joint: Right_gimbal_joint
+
+  right_flywheel:
+    type: velocity_controllers/JointVelocityController
+    joint: Right_flywheel_joint
+
+  wheel:
+    type: effort_controllers/JointEffortController
+    joint: wheel_joint
+    
+# position_controllers/JointPositionController
+# effort_controllers/JointEffortController
+# velocity_controllers/JointVelocityController

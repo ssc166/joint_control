@@ -8,6 +8,7 @@ import rospy
 import os
 from std_msgs.msg import Float64, Float64MultiArray
 from gazebo_msgs.srv import GetModelState, GetLinkState
+from sensor_msgs.msg import JointState
 from geometry_msgs.msg import *
 import pylab as pl
 import control
@@ -158,36 +159,53 @@ def print_graph():
 
     plt.plot(sec_store, deg_store)
 
-    plt.xlabel('sec[s]')
-    plt.ylabel('tilt angle[deg]')
-    plt.title('Roll tilt angle')
-    plt.ylim(-2.5, 2.5)
+    plt.xlabel('sec[s]', fontsize=16)
+    # plt.ylabel('tilt angle[deg]')
+    # plt.title('Roll tilt angle')
+    plt.ylim(-19, 19)
     plt.xlim(0, 15)
-    # plt.legend(loc='upper right')
-    plt.grid(True, axis='y')
+    plt.xticks(fontsize=16)
+    plt.yticks(fontsize=16)
+    plt.legend([r'$\theta_r$[deg]'],loc='upper right', fontsize = 20)
+    plt.grid(axis='y')
 
     plt.show()
+    
+def gimbal_callback(msg):
+    global gimbal_pos
+    global gimbal_vel
+    # rate = rospy.Rate(100)
+    gimbal_pos = msg.position[2]
+    gimbal_vel = msg.velocity[2]
+    print('gimbal_pos: ', gimbal_pos)
+    print('----------------------')
+    # rate.sleep()
+    
+# def global_gimbal():
+#     global gimbal_pos
+#     global gimbal_vel
+#     return gimbal_pos, gimbal_vel
 
 #################################################################################################    
+z_com = 0.5004170132265042
+A, B, C, D = ser.Cal_Roll_SS(z_com)
+# A = np.array([[0,0,1,0],
+#             [0,0,0,1],
+#             [82.04066448,0,0,-1.91506379],
+#             [0,0,497.19879333, 0]])
 
-# A, B, C, D = ser.Cal_Roll_SS(z_com)
-A = np.array([[0,0,1,0],
-            [0,0,0,1],
-            [82.04066448,0,0,-1.91506379],
-            [0,0,497.19879333, 0]])
+# B = np.array([[0],[0],[0],[84.03361345]])
 
-B = np.array([[0],[0],[0],[84.03361345]])
+# C = np.eye(4)
 
-C = np.eye(4)
-
-D = np.array([[0], [0], [0], [0]])
+# D = np.array([[0], [0], [0], [0]])
 # q = [theta_R, theta_gb, theta_Rd, theta_gbd]
 Q = sp.Matrix([ [1,    0,    0,    0],
-                [0,    2,    0,    0],
-                [0,    0,    0.4,    0],
-                [0,    0,    0,    0.1]])
+                [0,    10,    0,    0],
+                [0,    0,    1,    0],
+                [0,    0,    0,    1]])
 
-R = sp.Matrix([ [5.5] ])
+R = sp.Matrix([ [1] ])
 
 K, S, E = roll_K_gain_R()
 ss0 = [A, B, C, D]
@@ -233,59 +251,74 @@ if __name__ == '__main__':
         pub_Lfw = rospy.Publisher('/wheeled_inverted_pendulum/left_flywheel/command', Float64, queue_size=100)
         pub_Rfw = rospy.Publisher('/wheeled_inverted_pendulum/right_flywheel/command', Float64, queue_size=100)
         # rospy.Subscriber('CoM_Roll', Float64MultiArray, callback)
-
-        gazebo_setting()
         
+
+       
+        gazebo_setting()
+
         gimbal_ori = 0
         gimbal_vel = 0
-        rate = rospy.Rate(1000)
-        
+        rate = rospy.Rate(100)
+        rate1 = rospy.Rate(1)
         rpm = 5000
         flywheel_ang_vel = (rpm * 2 * np.pi)/60        
         flywheel_vel = np.array([flywheel_ang_vel])
         print(flywheel_vel)
         
-        pub_Lfw.publish(flywheel_vel[0])
-        pub_Rfw.publish(-flywheel_vel[0])
         
         ref = 0
         t = 0.01
+        # rate1.sleep()
 
         cur_time = time.time()  
-        sec_time = time.time()           
-        while not rospy.is_shutdown():     
+        sec_time = time.time()  
+        rospy.Subscriber("/wheeled_inverted_pendulum/joint_states", JointState, gimbal_callback)         
+        while not rospy.is_shutdown():    
+            # global gimbal_pos
+            # global gimbal_vel
+            pub_Lfw.publish(flywheel_vel[0])
+            pub_Rfw.publish(-flywheel_vel[0])
+        
             last_time = cur_time
             cur_time = time.time()
             sec_cur_time = time.time()
             dt = cur_time - last_time 
             sec =  sec_cur_time - sec_time
             
-            # gimbal_ori_left_x, gimbal_ori_left_y, gimbal_ori_left_z = get_link_ori(gimbal_name_list[0], link_name_list[2])
-            # gimbal_vel_left_x, gimbal_vel_left_y, gimbal_vel_left_z= get_link_vel(gimbal_name_list[0], link_name_list[2])
-            link_ori_x, link_vel_x = get_link_param(gimbal_name_list[1], link_name_list[0])
+            link_ori_x, link_vel_x = get_link_param(gimbal_name_list[1], 'world')
                         
             # link_ori_x, link_ori_y, link_ori_z = get_link_ori(link_name_list[2], 'world')
             # link_vel_x, link_vel_y, link_vel_z = get_link_vel(link_name_list[2], 'world')
             body_ori_x,body_vel_x = get_body_param()
-            x0 = np.array([body_ori_x, link_ori_x, body_vel_x, link_vel_x])
+            
+            
+            if loop_cnt < 2:
+                x0 = np.array([body_ori_x, link_ori_x, body_vel_x, link_vel_x])
+                print('Gimbal_angle_r      (deg): ', link_ori_x*RAD2DEG)
+            else:
+                x0 = np.array([body_ori_x, gimbal_pos, body_vel_x, link_vel_x])
+                print('Gimbal_angle_r      (deg): ', gimbal_pos*RAD2DEG)
+            
             xd = np.array([0, 0, 0, 0])
+            # gimbal_pos
             # print(x0)
             u_R = - K @ (x0 - xd) 
             
             pub_Rgb.publish(u_R)
                 
-            # deg_store.append(link_ori_x*RAD2DEG)
+            # deg_store.append(body_ori_x*RAD2DEG)
             # sec_store.append(sec)
             
-            if loop_cnt % 10 == 0:
+            # if loop_cnt % 10 == 0:
                 # flywheel_vel_x, flywheel_vel_y, flywheel_vel_z= get_link_param(gimbal_name_list[2], gimbal_name_list[0])
                 
-                print('Gimbal_angle_r      (deg): ', link_ori_x*RAD2DEG)
-                # print('Gimbal_angle_l      (deg): ', gimbal_ori_left_z*RAD2DEG)
-                # print('FLywheel_velocity (rad/s): ', abs(flywheel_vel_y))
-                print('Roll                (deg): ', body_ori_x*RAD2DEG)
-                # print('Yaw                 (deg): ', link_ori_z*RAD2DEG)
-                print('====================================')
+            
+            # print('Gimbal_angle_l      (deg): ', gimbal_ori_left_z*RAD2DEG)
+            # print('FLywheel_velocity (rad/s): ', abs(flywheel_vel_y))
+            print('Roll                (deg): ', body_ori_x)
+            print('dt: ', dt )
+            # print('Yaw                 (deg): ', link_ori_z*RAD2DEG)
+            print('====================================')
 
             loop_cnt= loop_cnt + 1
             # print(deg_store)
@@ -293,6 +326,8 @@ if __name__ == '__main__':
             
             # if loop_cnt == 1500:
             #     print_graph()
+            #     sys.stdout = open('deg_store.txt','w')
+            #     print(deg_store)
                 
             
     except rospy.ROSInterruptException:

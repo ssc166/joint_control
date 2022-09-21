@@ -5,7 +5,7 @@ import numpy as np
 import rospy
 from std_msgs.msg import Float64MultiArray, Float64
 from gazebo_msgs.srv import GetModelState, ApplyBodyWrench, GetLinkState
-from sensor_msgs.msg import Imu
+from sensor_msgs.msg import Imu, JointState
 import math
 import WIP_utils as utils
 import modern_robotics as mr
@@ -17,6 +17,8 @@ import control
 import dmpc_tool_pitch as mpc
 import matplotlib.pyplot as plt
 from sympy.physics.mechanics import *
+import sys
+
 
 
 def gazebo_setting():
@@ -121,17 +123,42 @@ def get_wheel_param():
 
 def print_graph():
     
-    plt.plot(sec_store, deg_store)
-
-    plt.xlabel('sec[s]')
-    plt.ylabel('tilt angle[deg]')
-    plt.title('Pitch tilt angle')
-    plt.ylim(-2.5, 2.5)
+    # plt.figure(1)
+    plt.subplot(221)
+    plt.plot(sec_store, deg_1_store)
+    plt.xlabel('sec[s]', fontsize=16)
+    # plt.ylabel(r'$\theta_1$[deg]')
+    # plt.title('Pitch tilt angle')
+    plt.ylim(-19, 19)
     plt.xlim(0, 15)
-    # plt.legend(loc='upper right')
-    plt.grid(True, axis='y')
+    plt.xticks(fontsize=16)
+    plt.yticks(fontsize=16)
+    plt.legend([r'$\theta_1$[deg]'],loc='upper right', fontsize = 20)
+    plt.grid(axis='y')
+    
+    plt.subplot(222)
+    plt.plot(sec_store, deg_2_store)
+    plt.xlabel('sec[s]', fontsize=16)
+    # plt.ylabel(r'$\theta_b$[deg]')
+    # plt.title('Pitch tilt angle')
+    plt.ylim(-19, 19)
+    plt.xlim(0, 15)
+    plt.xticks(fontsize=16)
+    plt.yticks(fontsize=16)
+    plt.legend([r'$\theta_b$[deg]'],loc='upper right', fontsize = 20)
+    plt.grid(axis='y')
 
     plt.show()
+    
+def gimbal_callback(msg):
+    global ankle_pos
+    global ankle_vel
+    
+    ankle_pos = msg.position[3]
+    ankle_vel = msg.velocity[3]
+    print(ankle_pos)
+    
+
     
 # def Imucallback(msg):
 #     X, Y, Z = utils.quaternion_to_euler_angle(msg.orientation)
@@ -160,7 +187,8 @@ wheel_state = []
 wheel_name = 'wheel_link'
 wheel_name_list = [wheel_name]
 
-deg_store = []
+deg_1_store = []
+deg_2_store = []
 sec_store = []
 i = 0
 
@@ -202,19 +230,17 @@ if __name__ == '__main__':
         gazebo_setting()
         RAD2DEG = 180/np.pi
         
-        # rospy.Subscriber('/imu', Imu, Imucallback)
         link1_ori_y,link2_ori_y, link1_vel_y, link2_vel_y = get_cur_deg_vel()
-        # body_ori_y,body_vel_y = get_body_param()
         wheel_ori_x, wheel_ori_y, wheel_ori_z, wheel_vel_x, wheel_vel_y, wheel_vel_z = get_wheel_param()
 
-        x0 = np.array([link1_ori_y, link2_ori_y-0.745238866846359,wheel_vel_y,link1_vel_y,link2_vel_y])
+        x0 = np.array([wheel_ori_y, link1_ori_y, link2_ori_y-0.745238866846359,wheel_vel_y,link1_vel_y,link2_vel_y])
 
         mpc_model, estimator, u0 = mpc.set_model(x0)
         
         cur_time = time.time()    
         sec_time = time.time() 
         
-        
+        rospy.Subscriber("/wheeled_inverted_pendulum/joint_states", JointState, gimbal_callback)         
         while True:
             
             last_time = cur_time
@@ -225,42 +251,51 @@ if __name__ == '__main__':
             
             u = mpc_model.make_step(x0)
             
-            # link1_ori_y, link1_vel_y = get_cur_deg_vel()
-            # body_ori_y,body_vel_y = get_body_param()
-            # wheel_ori_x, wheel_ori_y, wheel_ori_z, wheel_vel_x, wheel_vel_y, wheel_vel_z = get_wheel_param()
-
-            # x0 = np.array([[wheel_ori_y],[link1_ori_y], [body_ori_y],[wheel_vel_y],[link1_vel_y],[body_vel_y]])
+            print('u:, ',u)
+            print('dt: ',dt)
+            # print(i)
             
-            # u = -K @ ( x0 )
-            # print(K)
-            print(u)
             u1 = u[0]
             u2 = u[1]
-            # print(u1)
+            
             pub_w.publish(u1)
-            pub_2.publish(-u2)
+            pub_2.publish(u2)
             
+            deg_1_store.append((link1_ori_y)*RAD2DEG)
+            deg_2_store.append((link2_ori_y-0.745238866846359)*RAD2DEG)
+            sec_store.append(sec)
             
-            # deg_store.append(body_ori_y*RAD2DEG)
-            # sec_store.append(sec)
             
             # if i == 1500:
             #     print_graph()
+            #     sys.stdout = open('deg_1_store.txt','w')
+            #     print(deg_1_store)
+            #     sys.stdout = open('deg_2_store.txt','w')
+            #     print(deg_2_store)
+                
                 
             rate.sleep()  
             
-            # ---------------------
-            # rospy.Subscriber('/imu', Imu, Imucallback)
             link1_ori_y,link2_ori_y, link1_vel_y, link2_vel_y = get_cur_deg_vel()
-            # body_ori_y,body_vel_y = get_body_param()
             wheel_ori_x, wheel_ori_y, wheel_ori_z, wheel_vel_x, wheel_vel_y, wheel_vel_z = get_wheel_param()
 
-            y_step = np.array([link1_ori_y, link2_ori_y-0.745238866846359,wheel_vel_y,link1_vel_y,link2_vel_y])
+            if i < 1:
+                y_step = np.array([wheel_ori_y, link1_ori_y, link2_ori_y-0.745238866846359,wheel_vel_y,link1_vel_y,link2_vel_y])
+            else:
+                
+                # print(link2_ori_y-0.745238866846359)
+                y_step = np.array([wheel_ori_y, link1_ori_y, ankle_pos,wheel_vel_y,link1_vel_y,ankle_vel])
+                # deg_1_store.append((link1_ori_y)*RAD2DEG)
+                # deg_2_store.append((ankle_pos)*RAD2DEG)
+                # sec_store.append(sec)
+            # y_step = np.array([wheel_ori_y, link1_ori_y, link2_ori_y-0.745238866846359,wheel_vel_y,link1_vel_y,link2_vel_y])
             
-            print('-------------------------------------')
-            print('state: ', y_step)
-            print('dt: ',dt)
-            print('-------------------------------------')
+            
+            if i % 10 == 0:
+                print('-------------------------------------')
+                print('state: ', y_step)
+                print('dt: ',dt)
+                print('-------------------------------------')
             
             x0 = estimator.make_step(y_step)
             

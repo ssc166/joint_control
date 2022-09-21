@@ -15,7 +15,7 @@ def set_model(init_angle):
     model = do_mpc.model.Model(model_type)
 
     # States struct (optimization variables):
-    # theta_w = model.set_variable(var_type='_x', var_name='theta_w', shape=(1,1))
+    theta_w = model.set_variable(var_type='_x', var_name='theta_w', shape=(1,1))
     theta_1 = model.set_variable(var_type='_x', var_name='theta_1', shape=(1,1))
     theta_2 = model.set_variable(var_type='_x', var_name='theta_2', shape=(1,1))
     dtheta_w = model.set_variable(var_type='_x', var_name='dtheta_w', shape=(1,1))
@@ -61,28 +61,28 @@ def set_model(init_angle):
     
     # mterm = model.aux['E_kin'] - model.aux['E_pot']
     # lterm = model.aux['E_kin'] - model.aux['E_pot']
-    model.set_expression(expr_name='cost', expr=sum1(theta_1**2 + theta_2**2 + dtheta_w**2 + dtheta_1**2 + dtheta_2**2))
-    # model.set_expression(expr_name='cost', expr=sum1(theta_w**2+theta_1**2 + theta_2**2 + dtheta_w**2 + dtheta_1**2 + dtheta_2**2))
+    # model.set_expression(expr_name='cost', expr=sum1(theta_1**2 + theta_2**2 + dtheta_w**2 + dtheta_1**2 + dtheta_2**2))
+    model.set_expression(expr_name='cost', expr=sum1(theta_w**2+theta_1**2 + theta_2**2 + dtheta_w**2 + dtheta_1**2 + dtheta_2**2))
 
 
     Ac, Bc, Cc, Dc = sep.Cal_Pitch_SS()
     
-    A, B, C, D = gen_discrete_model_from_cont(Ac, Bc, Cc, Dc, 0.026)
+    A, B, C, D = gen_discrete_model_from_cont(Ac, Bc, Cc, Dc, 0.014)
     
-    # x_1_next = A[:,0][0]*theta_w + A[:,1][0]*theta_1 + A[:,2][0]*theta_2 + A[:,3][0]*dtheta_w + A[:,4][0]*dtheta_1 + A[:,5][0]*dtheta_2 + B[:,0][0]*u_w + B[:,1][0]*u_b 
-    # x_2_next =  A[:,0][1]*theta_w + A[:,1][1]*theta_1 + A[:,2][1]*theta_2 + A[:,3][1]*dtheta_w + A[:,4][1]*dtheta_1 + A[:,5][1]*dtheta_2 + B[:,0][1]*u_w + B[:,1][1]*u_b 
-    # x_3_next =  A[:,0][2]*theta_w + A[:,1][2]*theta_1 + A[:,2][2]*theta_2 + A[:,3][2]*dtheta_w + A[:,4][2]*dtheta_1 + A[:,5][2]*dtheta_2 + B[:,0][2]*u_w + B[:,1][2]*u_b
-    # x_4_next =  A[:,0][3]*theta_w + A[:,1][3]*theta_1 + A[:,2][3]*theta_2 + A[:,3][3]*dtheta_w + A[:,4][3]*dtheta_1 + A[:,5][3]*dtheta_2 + B[:,0][3]*u_w + B[:,1][3]*u_b
-    # x_5_next =  A[:,0][4]*theta_w + A[:,1][4]*theta_1 + A[:,2][4]*theta_2 + A[:,3][4]*dtheta_w + A[:,4][4]*dtheta_1 + A[:,5][4]*dtheta_2 + B[:,0][4]*u_w + B[:,1][4]*u_b
-    # x_6_next =  A[:,0][5]*theta_w + A[:,1][5]*theta_1 + A[:,2][5]*theta_2 + A[:,3][5]*dtheta_w + A[:,4][5]*dtheta_1 + A[:,5][5]*dtheta_2 + B[:,0][5]*u_w + B[:,1][5]*u_b 
+    x_1_next = A[:,0][0]*theta_w + A[:,1][0]*theta_1 + A[:,2][0]*theta_2 + A[:,3][0]*dtheta_w + A[:,4][0]*dtheta_1 + A[:,5][0]*dtheta_2 + B[:,0][0]*u_w + B[:,1][0]*u_b 
+    x_2_next =  A[:,0][1]*theta_w + A[:,1][1]*theta_1 + A[:,2][1]*theta_2 + A[:,3][1]*dtheta_w + A[:,4][1]*dtheta_1 + A[:,5][1]*dtheta_2 + B[:,0][1]*u_w + B[:,1][1]*u_b 
+    x_3_next =  A[:,0][2]*theta_w + A[:,1][2]*theta_1 + A[:,2][2]*theta_2 + A[:,3][2]*dtheta_w + A[:,4][2]*dtheta_1 + A[:,5][2]*dtheta_2 + B[:,0][2]*u_w + B[:,1][2]*u_b
+    x_4_next =  A[:,0][3]*theta_w + A[:,1][3]*theta_1 + A[:,2][3]*theta_2 + A[:,3][3]*dtheta_w + A[:,4][3]*dtheta_1 + A[:,5][3]*dtheta_2 + B[:,0][3]*u_w + B[:,1][3]*u_b
+    x_5_next =  A[:,0][4]*theta_w + A[:,1][4]*theta_1 + A[:,2][4]*theta_2 + A[:,3][4]*dtheta_w + A[:,4][4]*dtheta_1 + A[:,5][4]*dtheta_2 + B[:,0][4]*u_w + B[:,1][4]*u_b
+    x_6_next =  A[:,0][5]*theta_w + A[:,1][5]*theta_1 + A[:,2][5]*theta_2 + A[:,3][5]*dtheta_w + A[:,4][5]*dtheta_1 + A[:,5][5]*dtheta_2 + B[:,0][5]*u_w + B[:,1][5]*u_b 
     
-    x_2_next =  A[:,1][1]*theta_1 + A[:,2][1]*theta_2 + A[:,3][1]*dtheta_w + A[:,4][1]*dtheta_1 + A[:,5][1]*dtheta_2 + B[:,0][1]*u_w + B[:,1][1]*u_b 
-    x_3_next =  A[:,1][2]*theta_1 + A[:,2][2]*theta_2 + A[:,3][2]*dtheta_w + A[:,4][2]*dtheta_1 + A[:,5][2]*dtheta_2 + B[:,0][2]*u_w + B[:,1][2]*u_b
-    x_4_next =  A[:,1][3]*theta_1 + A[:,2][3]*theta_2 + A[:,3][3]*dtheta_w + A[:,4][3]*dtheta_1 + A[:,5][3]*dtheta_2 + B[:,0][3]*u_w + B[:,1][3]*u_b
-    x_5_next =  A[:,1][4]*theta_1 + A[:,2][4]*theta_2 + A[:,3][4]*dtheta_w + A[:,4][4]*dtheta_1 + A[:,5][4]*dtheta_2 + B[:,0][4]*u_w + B[:,1][4]*u_b
-    x_6_next =  A[:,1][5]*theta_1 + A[:,2][5]*theta_2 + A[:,3][5]*dtheta_w + A[:,4][5]*dtheta_1 + A[:,5][5]*dtheta_2 + B[:,0][5]*u_w + B[:,1][5]*u_b 
+    # x_2_next =  A[:,1][1]*theta_1 + A[:,2][1]*theta_2 + A[:,3][1]*dtheta_w + A[:,4][1]*dtheta_1 + A[:,5][1]*dtheta_2 + B[:,0][1]*u_w + B[:,1][1]*u_b 
+    # x_3_next =  A[:,1][2]*theta_1 + A[:,2][2]*theta_2 + A[:,3][2]*dtheta_w + A[:,4][2]*dtheta_1 + A[:,5][2]*dtheta_2 + B[:,0][2]*u_w + B[:,1][2]*u_b
+    # x_4_next =  A[:,1][3]*theta_1 + A[:,2][3]*theta_2 + A[:,3][3]*dtheta_w + A[:,4][3]*dtheta_1 + A[:,5][3]*dtheta_2 + B[:,0][3]*u_w + B[:,1][3]*u_b
+    # x_5_next =  A[:,1][4]*theta_1 + A[:,2][4]*theta_2 + A[:,3][4]*dtheta_w + A[:,4][4]*dtheta_1 + A[:,5][4]*dtheta_2 + B[:,0][4]*u_w + B[:,1][4]*u_b
+    # x_6_next =  A[:,1][5]*theta_1 + A[:,2][5]*theta_2 + A[:,3][5]*dtheta_w + A[:,4][5]*dtheta_1 + A[:,5][5]*dtheta_2 + B[:,0][5]*u_w + B[:,1][5]*u_b 
     
-    # model.set_rhs('theta_w', x_1_next)
+    model.set_rhs('theta_w', x_1_next)
     model.set_rhs('theta_1', x_2_next)
     model.set_rhs('theta_2', x_3_next)
     model.set_rhs('dtheta_w', x_4_next)
@@ -95,8 +95,8 @@ def set_model(init_angle):
 
     setup_mpc = {
         'n_robust': 0,
-        'n_horizon': 200,
-        't_step': 0.026,
+        'n_horizon': 80,
+        't_step': 0.014,
         'store_full_solution':False,
     }
     # Ts:0.025, H:100, R: 70, t: 0.01
@@ -108,13 +108,16 @@ def set_model(init_angle):
     lterm = model.aux['cost'] # terminal cost
 
     mpc.set_objective(mterm=mterm, lterm=lterm)
-    mpc.set_rterm(u_w=10)
-    mpc.set_rterm(u_b=1)
+    mpc.set_rterm(u_w=10000000)
+    mpc.set_rterm(u_b=10000000)
+    
+    # mpc.set_rterm(u_w=4)
+    # mpc.set_rterm(u_b=100)
 
     # max_x = np.array([[3.14], [0.3], [0], [0]])
 
-    # mpc.bounds['lower','_x','phi'] = -0.5
-    # mpc.bounds['upper','_x','phi'] =  0.5
+    # mpc.bounds['lower','_x','theta_1'] = -0.1
+    # mpc.bounds['upper','_x','theta_1'] =  0.1
     
     # mpc.bounds['lower','_u','u_w'] = -50
     # mpc.bounds['upper','_u','u_w'] =  50
@@ -127,7 +130,7 @@ def set_model(init_angle):
     simulator = do_mpc.simulator.Simulator(model)
     estimator = do_mpc.estimator.StateFeedback(model)
     
-    simulator.set_param(t_step = 0.025)
+    simulator.set_param(t_step = 0.021)
 
     simulator.setup()
     

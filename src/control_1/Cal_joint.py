@@ -61,10 +61,16 @@ def get_end_point(q2, q3, q4):
     L2c = L2 - 0.045289
     L3c = L3 - 0.18878
     L4c = 0.17188
+    
+    I_wx = 0.002997277
+    I_1x = 0.00613516
+    I_2x =0.010192581
+    I_3x =0.008595913
+    I_4x =0.306643651
 
-    I_2 =0.009599672
-    I_3 =0.007917693
-    I_4 =0.257336003
+    I_2y =0.009599672
+    I_3y =0.007917693
+    I_4y =0.257336003
 
     theta_2 = np.pi/2 + q2
     theta_3 = np.pi/2 + q2 + q3
@@ -87,7 +93,7 @@ def get_end_point(q2, q3, q4):
     l = np.sqrt(float(x_com)**2 + float(z_com)**2)
     theta_P = np.arctan(float(x_com)/float(z_com))
 
-    I_by =  I_2 + I_3 + I_4 +  m2*(z_com-z_2c)**2 +   m3*(z_com-z_3c)**2 +  m4*(z_com-z_4c)**2 
+    I_by =  I_2y + I_3y + I_4y +  m2*(z_com-z_2c)**2 +   m3*(z_com-z_3c)**2 +  m4*(z_com-z_4c)**2 
     return x,z, x_com, z_com, I_by, l,theta_P
 
 def horizon_angle_traj_list(a, t, time_step,thetalistd, horizon_path, z_com):
