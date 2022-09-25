@@ -6,7 +6,7 @@ import math
 import time
 import rospy
 import os
-from std_msgs.msg import Float64, Float64MultiArray
+from std_msgs.msg import Float64, Float64MultiArray, String
 from gazebo_msgs.srv import GetModelState, GetLinkState
 from sensor_msgs.msg import JointState
 from geometry_msgs.msg import *
@@ -441,7 +441,19 @@ else:
     window = sg.Window('CULR Pitch Balancing Control Gui', layout_main, finalize=True)
 
 #################################################################################################
-    
+
+def callback(data):
+    # # print(data)
+    # if event == data:
+    flywheel_flag=0
+    print("All Stop")
+
+def listener():
+    rospy.init_node('emergency_sub', anonymous=True)
+    rospy.Subscriber('emergency', String, callback)
+    # rospy.spin()
+
+
 while True:
     event, values = window.read(timeout=100)
 
@@ -625,6 +637,7 @@ while True:
             print("Please select USB Port first")
 
 #########################################################################
+    listener()
 
     if event == "Flywheel Start":
         if flywheel_state == 0:

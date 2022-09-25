@@ -7,7 +7,7 @@ import math
 import time
 import rospy
 import os
-from std_msgs.msg import Float64, Float64MultiArray
+from std_msgs.msg import Float64, Float64MultiArray, String
 from gazebo_msgs.srv import GetModelState, GetLinkState
 from sensor_msgs.msg import JointState
 from geometry_msgs.msg import *
@@ -393,10 +393,12 @@ layout_col2 = [ [sg.Text('<Experiment Setup>', font=("Tahoma", 14))],
                                 key='-STATUS_TABLE-',
                                 row_height=20)],
 ]
-
+# , size=(30, 16)
 imu_status_data = []
 imu_heading = ["Roll", "Pitch", "Yaw"]
 layout_col3= [ # [sg.Text('<Current Torque>', font=("Tahoma", 14))],
+                [sg.Button('EMERGENCY', font=('Tahoma', 50),button_color = 'red')],
+                [sg.HorizontalSeparator()],
                 [sg.Text('<IMU Status>', font=("Tahoma", 15)), sg.Button('IMU ON'), sg.Button('IMU OFF')],
                 [sg.Table(values=imu_status_data, headings=imu_heading, max_col_width=130,
                                 background_color='black',
@@ -434,6 +436,10 @@ else:
 #################################################################################################
 imu_cmg_data = []
 i = 1
+
+pub = rospy.Publisher('emergency', String, queue_size=10)
+rospy.init_node('emergency_pub', anonymous=True)
+
 while True:
     event, values = window.read(timeout=100)
 
@@ -640,6 +646,14 @@ while True:
 
 #########################################################################
 
+    if event == "EMERGENCY":
+        gimbal_flag = 0
+        flywheel_flag = 0
+        pub.publish("EMERGENCY")
+        print("Emergency Stop")
+
+#########################################################################
+        
     if event == "Flywheel Start":
         if flywheel_state == 0:
             flywheel_flag = 1 
@@ -724,4 +738,4 @@ while True:
 
 #########################################################################
 
-
+    
