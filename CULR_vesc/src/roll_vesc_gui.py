@@ -59,8 +59,8 @@ i = 1
 j = 1
 DEG2RAD = np.pi/180
 RAD2DEG = 180/np.pi
-pub = rospy.Publisher('emergency', String, queue_size=10)
-rospy.init_node('emergency_pub', anonymous=True)
+# pub = rospy.Publisher('emergency', String, queue_size=10)
+# rospy.init_node('emergency_pub', anonymous=True)
 
 # default about joint
 joint_list = ['G1', 'G2', 'F2']
@@ -338,16 +338,16 @@ def call_ecd_data():
 #             print("Please input number")
 #     window_subwin2_1.close()
 
-index = count()
+# index = count()
 
-x_index = []
-def animate(i):
-    x_index.append(next(index))
-    # plt.cla()
-    plt.plot(x_index[:len(roll_list)], roll_list)
-    plt.xlabel('Roll [deg]', fontsize=15)
-    plt.xlabel('sec', fontsize=15)
-    plt.grid(True)
+# x_index = []
+# def animate(i):
+#     x_index.append(next(index))
+#     # plt.cla()
+#     plt.plot(x_index[:len(roll_list)], roll_list)
+#     plt.xlabel('Roll [deg]', fontsize=15)
+#     plt.xlabel('sec', fontsize=15)
+#     plt.grid(True)
     
 # def draw_figure(canvas, figure):
 #     figure_canvas_agg = FigureCanvasTkAgg(figure, canvas)
@@ -370,6 +370,8 @@ ports_title = ["Port Name", "VID:PID"]
 ports_data = scan_serial_ports()
 # vesc id table data
 vesc_id_data = []
+time_data = []
+time_heading = ["Time Step"]
 vesc_id_headings = ["Port","ID","COMM", "Joint"]
 layout_col1 = [ [sg.Text('<CMG Experiment>', font=("Tahoma", 16))],
                 [sg.Table(values=ports_data, headings=ports_title, max_col_width=100,
@@ -399,6 +401,15 @@ layout_col1 = [ [sg.Text('<CMG Experiment>', font=("Tahoma", 16))],
                                 key='-VESC_TABLE-',
                                 row_height=30)],
                 [sg.Button('SCAN VESC'), sg.Button('Refresh List')],
+                [sg.Table(values=time_data,headings=time_heading, max_col_width=1000,
+                                                            background_color='black',
+                                                            auto_size_columns=False,
+                                                            display_row_numbers=False,
+                                                            justification='center',
+                                                            num_rows=1,
+                                                            alternating_row_color='black',
+                                                            key='-TIME_TABLE-',
+                                                            row_height=30)],
                 #[sg.HorizontalSeparator()],
 ]
 
@@ -415,10 +426,12 @@ command_layout = [ [sg.Text("Terminal Command to"),
 ]
 
 status_data = []
+
 status_heading = ["ID", "rps", "curr_A", "motor_temp"]
+
 size_input = (10,None)
-layout_col2 = [ [sg.Text('<Experiment Setup>', font=("Tahoma", 14))],
-                [sg.Text('Flywheel Rotary Speed', font=("Tahoma", 12))],
+layout_col2 = [ [sg.Text('<Experiment Setup>', font=("Tahoma", 15))],
+                [sg.Text('Flywheel', font=("Tahoma", 12))],
                 [sg.Text('RPM', size=(8,1)), sg.Input(size=(8,1), focus=True, key='-RPM-')],
                 [sg.Button('Flywheel Start', size=(15,1)), sg.Button('Flywheel Stop', size=(15,1)), sg.Button('Flywheel Release', size=(15,1))],
                 [sg.HorizontalSeparator()],
@@ -492,12 +505,16 @@ else:
     window = sg.Window('CULR Roll Balancing Control Gui', layout_main, finalize=True)
 
 #################################################################################################
-
+cur_time = time.time()  
 sec_time = time.time() 
 while True:
-    event, values = window.read(timeout=10)
-
+    event, values = window.read(timeout=1)
     
+    last_time = cur_time
+    cur_time = time.time()
+    time_data = [cur_time-last_time]
+    window.Element('-TIME_TABLE-').Update(values=time_data)
+    # print('time: ', cur_time-last_time)   
 
     if event == sg.WIN_CLOSED or event == 'Cancel': # if user closes window or clicks cancel
         for class_instance in vesc_serial_list:
@@ -714,20 +731,21 @@ while True:
         imu_status_data = selected_ser_class.get_imu_status()
         imu_cmg_data = selected_ser_class.get_imu_cmg()
         # print(imu_status_data)
-        if j > 1:
-            # print(imu_status_data[0])
-            # print(imu_status_data[0][0])
-            # print(roll_list)
-            # sec_list.append(sec)
-            # fig = plt.figure()
-            # fig.add_subplot(111).plot(sec_list, roll_list)
-            # fig_canvas_agg = draw_figure(window['-CANVAS-'].TKCanvas, create_plot(roll_list, sec_list))
-            roll_list.append(imu_status_data[0][0])
-            x_index.append(next(index))
-            ani = FuncAnimation(plt.gcf(), animate, interval = 1)
-            plt.tight_layout()
-            plt.show()      
-        j+=1       
+        # print('-------------------------------------')
+        # if j > 1:
+        #     # print(imu_status_data[0])
+        #     # print(imu_status_data[0][0])
+        #     # print(roll_list)
+        #     # sec_list.append(sec)
+        #     # fig = plt.figure()
+        #     # fig.add_subplot(111).plot(sec_list, roll_list)
+        #     # fig_canvas_agg = draw_figure(window['-CANVAS-'].TKCanvas, create_plot(roll_list, sec_list))
+        #     roll_list.append(imu_status_data[0][0])
+        #     x_index.append(next(index))
+        #     ani = FuncAnimation(plt.gcf(), animate, interval = 1)
+        #     plt.tight_layout()
+        #     plt.show()      
+        # j+=1       
         window.Element('-IMU_TABLE-').Update(values=imu_status_data)
     
     if event == "IMU OFF":
@@ -750,7 +768,7 @@ while True:
         G1_init = 242.117   
         G2_init = 19.446
         # print(imu_cmg_data)
-        last_time = time.time()
+        
         
         if i == 1:
     
@@ -766,7 +784,7 @@ while True:
             print('##################################')
             x_next = lqr_roll.cmg_lqr(pos_data, rps_data, imu_cmg_data, G1_init, G2_init, 5000)
             # print(x_next)
-            cur_motor = x_next / K_t
+            # cur_motor = x_next / K_t
             # float(values['-RPM-'])
             send_cmd('G1', 'servo', -float(x_next[0]*RAD2DEG)*6 + G1_init)
             send_cmd('G2', 'servo', float(x_next[0]*RAD2DEG)*6 + G2_init)
@@ -776,8 +794,7 @@ while True:
             # send_cmd('G1', 'servo', G1_init + i*6)
             # send_cmd('G2', 'servo', G2_init - 6*i)
             
-        cur_time = time.time()
-        print('time: ', cur_time-last_time)
+        
         i+=1
         
 
@@ -805,7 +822,10 @@ while True:
         send_cmd('G1', 'terminal', 'or_gz')
         send_cmd('G2', 'terminal', 'or_gz')
         # send_cmd('G1', 'servo', 640)
-        # send_cmd('G2', 'servo', 15)        
+        # send_cmd('G2', 'servo', 15)     
+    
+    
+    
 
 #########################################################################
 

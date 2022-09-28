@@ -44,8 +44,9 @@ def packet_encoding(comm, comm_value = None):
         elif  comm == COMM_PACKET_ID['COMM_GET_IMU_DATA']:
             command = comm
             # print("comm: ", comm)
-            mask = 12
-            command_frame = [comm, mask]
+            mask_H = 0b11111111
+            mask_L = 0b11111111
+            command_frame = [comm, mask_H, mask_L]
                             
         elif comm == COMM_PACKET_ID['COMM_FORWARD_CAN']:
             vesc_target_id = comm_value[0]
