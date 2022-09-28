@@ -10,6 +10,7 @@ import platform
 import numpy as np
 from . import vesc_crc
 from .general_defines import *
+import math
 
 ######################### USB #########################
 def list_serial():
@@ -29,7 +30,7 @@ def list_serial():
 def packet_encoding(comm, comm_value = None):
         start_frame = [2]
 
-        if comm == COMM_PACKET_ID['COMM_CUSTOM_APP_DATA'] or comm == COMM_PACKET_ID['COMM_GET_IMU_DATA']:
+        if comm == COMM_PACKET_ID['COMM_CUSTOM_APP_DATA']:
             if comm_value[0] == None:
                 command = comm
                 vesc_target_id = comm_value[1]
@@ -39,6 +40,12 @@ def packet_encoding(comm, comm_value = None):
                 vesc_target_id = comm_value[1]
                 comm_value = comm_value[2]
                 command_frame = [comm, OPENROBOT_HOST_TYPE['USB'], 1, vesc_target_id, command]
+        
+        elif  comm == COMM_PACKET_ID['COMM_GET_IMU_DATA']:
+            command = comm
+            # print("comm: ", comm)
+            mask = 12
+            command_frame = [comm, mask]
                             
         elif comm == COMM_PACKET_ID['COMM_FORWARD_CAN']:
             vesc_target_id = comm_value[0]
@@ -91,7 +98,7 @@ def packet_encoding(comm, comm_value = None):
         data_len = [len(data_frame)]
 
         #print("data_frame:",data_frame)
-        #print("data_len:",data_len)
+        # print("data_len:",data_len)
 
         arr = (ctypes.c_ubyte * len(data_frame))(*data_frame)
         #crc = crc_vesc.crc16(arr,len(data_frame))
@@ -101,13 +108,15 @@ def packet_encoding(comm, comm_value = None):
         crc_frame = [crch, crcl]
         end_frame = [3]
         data_send = start_frame + data_len + data_frame + crc_frame + end_frame
+        # print('-----------------------------------------------------')
+        # print('data_send: ',data_send)
         return data_send
 
 class VESC_VALUES:
     def __init__(self):
         self.temp_fet = 0
         self.temp_motor = 0
-        self.otor_current = 0
+        self.motor_current = 0
         self.input_current = 0
         self.id_current = 0
         self.iq_current = 0
@@ -137,6 +146,13 @@ class VESC_VALUES:
         self.gyro_x  = 0
         self.gyro_y  = 0
         self.gyro_z =0
+        self.mag_x  = 0
+        self.mag_y  = 0
+        self.mag_z =0
+        self.q_x  = 0
+        self.q_y  = 0
+        self.q_z =0
+        self.q_w =0
         
 
 class VESC_USB:
@@ -218,6 +234,29 @@ class VESC_USB:
         else:
             result = int(value)/div
         return result
+    
+    def get_bytes_auto(self, data):
+        # print(data)
+        
+
+        # x = data
+        res = self.get_bytes(data, 1)
+        # print(res)
+        e = (res >> 23) & 0xFF
+        sig_i = res & 0x7FFFFF
+        
+        neg = bool(res & (1 << 31))
+        
+        sig = 0.0
+        
+        if e != 0 or sig_i != 0:
+            sig = sig_i / (8388608.0 * 2.0) + 0.5
+            e -= 126
+        if neg ==True:
+            sig = -sig
+        x = math.ldexp(sig,e)
+        
+        return x
 
     #데이터 처리할 함수
     def parsing_data(self, data):
@@ -227,7 +266,7 @@ class VESC_USB:
         # data frame divide
         ind = 0
         start_byte = data[ind]; ind += 1
-        len = data[ind]; ind += 1
+        lena = data[ind]; ind += 1
         data_frame = data[ind:-3];
         crc_frame = data[-3:-1];
         end_byte = data[-1]
@@ -244,7 +283,7 @@ class VESC_USB:
         # data parsing
         if start_byte == 2 and end_byte == 3 and crc_result:
             ind_f = 0
-            ind_r = len
+            ind_r = lena
             command = data_frame[ind_f]; ind_f += 1
 
             if command == COMM_PACKET_ID['COMM_FW_VERSION']:
@@ -267,13 +306,15 @@ class VESC_USB:
         
             elif command == COMM_PACKET_ID['COMM_PING_CAN']:
                 can_connected_id = []
-                for i in range(len-1):
+                for i in range(lena-1):
                     can_connected_id.append(data_frame[ind_f]); ind_f += 1
                 #print("can connected ID:",can_connected_id)
                 self.controller_id_list = self.controller_id_list + can_connected_id
                 print(self.serial_name.port,"- IDs:",self.controller_id_list)
 
             elif command == COMM_PACKET_ID['COMM_GET_VALUES']:
+                # print('value: ', data_frame)
+                # print('value1: ', len(data_frame))
                 self.values.temp_fet = self.get_bytes(data_frame[ind_f:ind_f+2], 10); ind_f += 2
                 self.values.temp_motor = self.get_bytes(data_frame[ind_f:ind_f+2], 10); ind_f += 2
                 self.values.motor_current = self.get_bytes(data_frame[ind_f:ind_f+4], 100); ind_f += 4
@@ -330,7 +371,8 @@ class VESC_USB:
                 RAD2DEG = 180/np.pi
                 #print("custom")
                 #print("raw data hex:",list2hex(data_frame))
-                # print(data_frame)
+                # print('custom: ', data_frame)
+                # print('custom1: ', len(data_frame))
                 can_devs_num = data_frame[ind_f]; ind_f += 1
                 controller_id = data_frame[ind_f]; ind_f += 1
                 #volt_input = self.get_bytes(data_frame[ind_f:ind_f+2], 10); ind_f += 2
@@ -395,20 +437,32 @@ class VESC_USB:
                 print(bytes(data_frame).decode())
                 
             elif command == COMM_PACKET_ID['COMM_GET_IMU_DATA']:
-                # can_devs_num = data_frame[ind_f]; ind_f += 1
-                # controller_id = data_frame[ind_f]; ind_f += 1
-                # print(data_frame)
-                self.values.roll = self.get_bytes(data_frame[ind_f:ind_f+4], 1); ind_f += 4
-                self.values.pitch = self.get_bytes(data_frame[ind_f:ind_f+4], 1); ind_f += 4
-                self.values.yaw = self.get_bytes(data_frame[ind_f:ind_f+4], 1); ind_f += 4
-                self.values.acc_x = self.get_bytes(data_frame[ind_f:ind_f+4], 1); ind_f += 4
-                self.values.acc_y = self.get_bytes(data_frame[ind_f:ind_f+4], 1); ind_f += 4
-                self.values.acc_z = self.get_bytes(data_frame[ind_f:ind_f+4], 1); ind_f += 4
-                self.values.gyro_x = self.get_bytes(data_frame[ind_f:ind_f+4], 1); ind_f += 4
-                self.values.gyro_y = self.get_bytes(data_frame[ind_f:ind_f+4], 1); ind_f += 4
-                self.values.gyro_z = self.get_bytes(data_frame[ind_f:ind_f+4], 1); ind_f += 4
+                RAD2DEG = 180/np.pi
+                can_devs_num = data_frame[ind_f]; ind_f += 1
+                controller_id = data_frame[ind_f]; ind_f += 1
+                # print('imu: ', data_frame)
+                # print('imu1: ', len(data_frame))
+                self.values.roll = self.get_bytes_auto(data_frame[ind_f:ind_f+4]); ind_f += 4
+                self.values.pitch = self.get_bytes_auto(data_frame[ind_f:ind_f+4]); ind_f += 4
+                self.values.yaw = self.get_bytes_auto(data_frame[ind_f:ind_f+4]); ind_f += 4
+                self.values.acc_x = self.get_bytes_auto(data_frame[ind_f:ind_f+4]); ind_f += 4
+                self.values.acc_y = self.get_bytes_auto(data_frame[ind_f:ind_f+4]); ind_f += 4
+                self.values.acc_z = self.get_bytes_auto(data_frame[ind_f:ind_f+4]); ind_f += 4
+                self.values.gyro_x = self.get_bytes_auto(data_frame[ind_f:ind_f+4]); ind_f += 4
+                self.values.gyro_y = self.get_bytes_auto(data_frame[ind_f:ind_f+4]); ind_f += 4
+                self.values.gyro_z = self.get_bytes_auto(data_frame[ind_f:ind_f+4]); ind_f += 4
+                self.values.mag_x = self.get_bytes_auto(data_frame[ind_f:ind_f+4]); ind_f += 4
+                self.values.mag_y = self.get_bytes_auto(data_frame[ind_f:ind_f+4]); ind_f += 4
+                self.values.mag_z = self.get_bytes_auto(data_frame[ind_f:ind_f+4]); ind_f += 4
+                self.values.q_x = self.get_bytes_auto(data_frame[ind_f:ind_f+4]); ind_f += 4
+                self.values.q_y = self.get_bytes_auto(data_frame[ind_f:ind_f+4]); ind_f += 4
+                self.values.q_z = self.get_bytes_auto(data_frame[ind_f:ind_f+4]); ind_f += 4
+                self.values.q_w = self.get_bytes_auto(data_frame[ind_f:ind_f+4]); ind_f += 4
                 
-                self.imu_status_data = [[self.values.roll, self.values.pitch, self.values.yaw]]
+                self.imu_status_data = [[self.values.roll*RAD2DEG, self.values.pitch*RAD2DEG, self.values.yaw*RAD2DEG, self.values.acc_x, self.values.acc_y, self.values.acc_z, self.values.gyro_x, self.values.gyro_y, self.values.gyro_z, self.values.mag_x, self.values.mag_y, self.values.mag_z, self.values.q_x, self.values.q_y, self.values.q_z, self.values.q_w]]
+                # self.imu_status_data = [[self.values.roll*RAD2DEG, self.values.pitch*RAD2DEG, self.values.yaw*RAD2DEG,]]
+
+                # self.imu_status_data = [[self.values.roll, self.values.pitch, self.values.yaw]]
                 self.imu_cmg_data = [[self.values.roll, self.values.gyro_x]]
                 # roll = -atan2f(q0 * q1 + q2 * q3, 0.5 - (q1 * q1 + q2 * q2));
                 # pitch = asinf(-2.0 * (q1 * q3 - q0 * q2));
@@ -428,6 +482,7 @@ class VESC_USB:
     
     def get_status_data(self):
         st_data = [[np.nan]]*len(self.controller_id_list)
+        print(len(st_data))
         # print('controller_id_list: ', self.controller_id_list)
         for i in range(len(st_data)):
             # st_data[i] = [self.pos_data[i][0], 0, self.pos_data[i][1], self.rps_data[i][1], self.current_data[i][1], self.temp_data[i][1]]
@@ -436,6 +491,7 @@ class VESC_USB:
             # print('current_data: ', self.current_data)
             # print('temp_data: ', self.temp_data)
             st_data[i] = [self.pos_data[i][0], self.rps_data[i][1], self.current_data[i][1], self.temp_data[i][1]]
+            print(i)
         return st_data
 
     # USB RX Thread

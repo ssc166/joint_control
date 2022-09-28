@@ -7,7 +7,7 @@ from EoM import *
 from sympy.physics.mechanics import *
 import pylab as pl
 
-def Cal_Roll_SS(z):
+def Cal_Roll_SS(z, rpm):
     I_bx, I_fx, I_fy, m_all, w, l, l_f, f_d, T_gb, g, r, L = sp.symbols('I_bx, I_fx, I_fy, m_all, w, l, l_f, f_d, T_gb, g, r, L')
     K_t, K_e, R, J_m, V, n, f = sp.symbols('K_t, K_e, R, J_m, V, n, f')
     theta_R, theta_gb = dynamicsymbols('theta_R, theta_gb')
@@ -31,7 +31,7 @@ def Cal_Roll_SS(z):
 
     tau_eq = sp.simplify(tau.subs(eq_point))
 
-    rpm = 5000
+    
     flywheel_ang_vel = (rpm * 2 * np.pi)/60 
 
     Ml, Cl, Gl, Wl = get_EoM_from_T(tau_eq,qdd,g,u)

@@ -41,12 +41,12 @@ height = ('0.889','0.969','1.069','1.146')
 tout = 0.5
 
 # default about joint
-joint_list = ['Wheel', 'Ankle_Pitch', 'Ankle_Roll', 'Knee', 'Hip_Pitch', 'Hip_Roll']
-# joint_list = ['G1']
+joint_list = ['Wheel', 'Ankle_Pitch', 'Ankle_Roll', 'Knee', 'Hip_Pitch', 'Hip_Roll', 'F2']
+# joint_list = ['F2']
 
 joint_original_tuple = tuple(joint_list)
-vesc_joint_match = {11:'Wheel', 22:'Ankle_Pitch', 33:'Ankle_Roll', 44:'Knee', 55:'Hip_Pitch', 66:'Hip_Roll'} # dictionary type, ID:'Joint Number'
-# vesc_joint_match = {1:'G1'} # dictionary type, ID:'Joint Number'
+vesc_joint_match = {11:'Wheel', 22:'Ankle_Pitch', 33:'Ankle_Roll', 44:'Knee', 55:'Hip_Pitch', 66:'Hip_Roll', 4:'F2'} # dictionary type, ID:'Joint Number'
+# vesc_joint_match = {4:'F2'} # dictionary type, ID:'Joint Number'
 
 
 
@@ -367,7 +367,7 @@ status_heading = ["ID", "rps", "curr_A", "motor_temp"]
 size_input = (10,None)
 layout_col2 = [ [sg.Text('<Balancing Control Setup>', font=("Tahoma", 16))],
                 [sg.Text('Height', size=(8,1)), sg.Combo(size=(5,1), values=height, default_value='0.969', readonly=True, k='-height-'), sg.Button('Initial Position', size=(15,1))],
-                [sg.Button('Balancing Start', size=(15,1)), sg.Button('Balancing Stop', size=(15,1)), sg.Button('All Release', size=(15,1))],
+                [sg.Button('Balancing Start', size=(15,1)), sg.Button('Balancing Stop', size=(15,1), key='-Stop-'), sg.Button('All Release', size=(15,1))],
                 [sg.Text('<Joint Servo Control [deg]>', font=("Tahoma", 16))],
                 [sg.Text(joint_list[1]), sg.Text(" "), 
                  sg.Text(joint_range[0][0], enable_events=True, key='-JOINT1_MIN-', size=(8,1)), 
@@ -423,8 +423,7 @@ layout_col3= [ # [sg.Text('<Current Torque>', font=("Tahoma", 14))],
 layout_main = [ [sg.Column(layout_col1), 
                  sg.VSeparator(),
 		         sg.Column(layout_col2),
-                 sg.VSeparator(), 
-                 sg.Column(layout_col3),
+
                 ],
 		[sg.HorizontalSeparator()],
 		[sg.Column(command_layout)],
@@ -439,21 +438,28 @@ if platform.system() == "Linux" and platform.architecture()[1] == "ELF":
     window = sg.Window('CULR Pitch Balancing Control Gui', layout_main, finalize=True, location=(0,0), size=(800,600), keep_on_top=True)
 else:
     window = sg.Window('CULR Pitch Balancing Control Gui', layout_main, finalize=True)
-
-#################################################################################################
-
+    
 def callback(data):
-    # # print(data)
+    global emergency
+    
+    emergency = data.data
+    print(emergency)
+    # print(data)
+    # window['-Stop-'].update('')
     # if event == data:
-    flywheel_flag=0
-    print("All Stop")
+    # event = " Balancing Stop"
+    # if event == " Balancing Stop":
+    #     flywheel_flag = 0
+    
+    
+    # print("All Stop")
 
 def listener():
     rospy.init_node('emergency_sub', anonymous=True)
     rospy.Subscriber('emergency', String, callback)
     # rospy.spin()
-
-
+#################################################################################################
+    
 while True:
     event, values = window.read(timeout=100)
 
@@ -624,7 +630,7 @@ while True:
     
     if on_flag ==1:
         
-        send_cmd('G1','request')
+        send_cmd('F2','request')
         st_data = selected_ser_class.get_status_data()
         # print(st_data)
         window.Element('-STATUS_TABLE-').Update(values=st_data)
@@ -638,8 +644,8 @@ while True:
 
 #########################################################################
     listener()
-
-    if event == "Flywheel Start":
+    
+    if event == "Balancing Start":
         if flywheel_state == 0:
             flywheel_flag = 1 
             print("Flywheel spinned")
@@ -647,13 +653,10 @@ while True:
             print("Flywheel already spinned")
     
     if flywheel_flag == 1:
-        rotaty_speed_RPM = float(values['-RPM-'])
-        rotaty_speed_DPS = rotaty_speed_RPM*60/(2*np.pi)
         
-        send_cmd('F1', 'dps', rotaty_speed_DPS)
-        send_cmd('F2', 'dps', -rotaty_speed_DPS)
+        send_cmd('F2', 'dps', 500)
 
-    if event == "Flywheel Stop":
+    if event == "-Stop-":
         if flywheel_state == 0:
                 flywheel_flag = 0 
                 print("Flywheel stopped")
@@ -667,41 +670,10 @@ while True:
             
 #########################################################################
             
-    if event == "Gimbal Start":
-        if gimbal_state == 0:
-            gimbal_flag = 1 
-            print("Gimbal operated")
-        else :
-            print("Gimbal already operated")
-    
-    if gimbal_flag == 1:
-        send_cmd('G1', 'servo', 100)
-        send_cmd('G2', 'servo', 100)
-
-    if event == "Gimbal Stop":
-        if gimbal_state == 0:
-                gimbal_flag = 0 
-                print("Gimbal stopped")
-        else :
-            print("Gimbal already stopped")
-            
-    if event == "Gimbal Release":
-            gimbal_flag = 0 
-            send_cmd('G1', 'release')
-            send_cmd('G2', 'release')
-            print("Gimbal released")
-            
-    if event == "Go to Zero":
-        if gimbal_state == 0:
-            gimbal_flag = 2 
-            print("Gimbal go to Zero")
-        else :
-            print("Gimbal already arrived at zero")
-            
-    if gimbal_flag == 2:
-        send_cmd('G1', 'servo', 244)
-        send_cmd('G2', 'servo', 15)        
-
+    if event == "All Release":
+        flywheel_flag = 0 
+        send_cmd('F2', 'release')
+        
 #########################################################################
 
 

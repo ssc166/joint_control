@@ -27,6 +27,9 @@ import time
 import csv
 import logging
 import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from itertools import count
 import numpy as np
 from openrobot_vesc_pyserial import vesc_pyserial as vs
 from threading import Timer
@@ -42,13 +45,29 @@ baud = ('115200', '460800', '921600')
 iteration = ('1','2','3','4','5','6','7','8','9','10')
 duty = ('0.1', '0.2', '0.3', '0.4', '0.5', '0.6', '0.7', '0.8')
 tout = 0.5
+K_t = 0.88
+
+imu_cmg_data = []
+
+roll_list = []
+pitch_list = []
+yaw_list = []
+
+sec_list = []
+
+i = 1
+j = 1
+DEG2RAD = np.pi/180
+RAD2DEG = 180/np.pi
+pub = rospy.Publisher('emergency', String, queue_size=10)
+rospy.init_node('emergency_pub', anonymous=True)
 
 # default about joint
-joint_list = ['G1', 'G2', 'F1', 'F2']
+joint_list = ['G1', 'G2', 'F2']
 # joint_list = ['G1']
 
 joint_original_tuple = tuple(joint_list)
-vesc_joint_match = {1:'G1', 2:'G2', 3:'F1', 4:'F2'} # dictionary type, ID:'Joint Number'
+vesc_joint_match = {1:'G1', 2:'G2', 4:'F2'} # dictionary type, ID:'Joint Number'
 # vesc_joint_match = {1:'G1'} # dictionary type, ID:'Joint Number'
 
 global vesc_id_data
@@ -229,6 +248,7 @@ def set_request_imu_data(vesc_target_id):
 def set_rcservo_pos_control(vesc_target_id, value):
     # prepare data
     comm_set_cmd = vs.COMM_PACKET_ID['COMM_SET_SERVO_POS']
+    
     send_data = vs.packet_encoding(comm_set_cmd, value)
     return send_data
 
@@ -318,7 +338,33 @@ def call_ecd_data():
 #             print("Please input number")
 #     window_subwin2_1.close()
 
+index = count()
+
+x_index = []
+def animate(i):
+    x_index.append(next(index))
+    # plt.cla()
+    plt.plot(x_index[:len(roll_list)], roll_list)
+    plt.xlabel('Roll [deg]', fontsize=15)
+    plt.xlabel('sec', fontsize=15)
+    plt.grid(True)
+    
+# def draw_figure(canvas, figure):
+#     figure_canvas_agg = FigureCanvasTkAgg(figure, canvas)
+#     figure_canvas_agg.draw()
+#     figure_canvas_agg.get_tk_widget().pack(side='top', fill='both', expand=1)
+#     return figure_canvas_agg
+    
+# def create_plot(roll_list, sec_list):
+#     # plt.cla()
+#     plt.plot(sec_list, roll_list)
+#     plt.xlabel('Roll [deg]', fontsize=15)
+#     plt.xlabel('sec', fontsize=15)
+#     plt.grid(True)
+#     return plt.gcf()
+
 ######################### GUI #########################
+
 # usb port table data 
 ports_title = ["Port Name", "VID:PID"]
 ports_data = scan_serial_ports()
@@ -381,7 +427,14 @@ layout_col2 = [ [sg.Text('<Experiment Setup>', font=("Tahoma", 14))],
                 [sg.Button('Gimbal Start', size=(15,1)), sg.Button('Gimbal Stop', size=(15,1)), sg.Button('Gimbal Release', size=(15,1))],
                 # [sg.Text('<Current Torque>', font=("Tahoma", 14))],
                 [sg.HorizontalSeparator()],
-                [sg.Text('<Status>', font=("Tahoma", 15)), sg.Button('ON'), sg.Button('OFF')],
+                [sg.Button('All Stop', size=(20,2), font=('Tahoma', 30),button_color = 'red')],
+                [sg.Button('All Release', size=(20,2), font=('Tahoma', 30),button_color = 'red')],
+                
+]
+
+imu_status_data = []
+imu_heading = ["Roll", "Pitch", "Yaw"]
+layout_col3= [ [sg.Text('<Status>', font=("Tahoma", 15)), sg.Button('ON'), sg.Button('OFF')],
                 [sg.Table(values=status_data, headings=status_heading, max_col_width=130,
                                 background_color='black',
                                 col_widths=[6,12,12,13],
@@ -392,12 +445,6 @@ layout_col2 = [ [sg.Text('<Experiment Setup>', font=("Tahoma", 14))],
                                 alternating_row_color='black',
                                 key='-STATUS_TABLE-',
                                 row_height=20)],
-]
-# , size=(30, 16)
-imu_status_data = []
-imu_heading = ["Roll", "Pitch", "Yaw"]
-layout_col3= [ # [sg.Text('<Current Torque>', font=("Tahoma", 14))],
-                [sg.Button('EMERGENCY', font=('Tahoma', 50),button_color = 'red')],
                 [sg.HorizontalSeparator()],
                 [sg.Text('<IMU Status>', font=("Tahoma", 15)), sg.Button('IMU ON'), sg.Button('IMU OFF')],
                 [sg.Table(values=imu_status_data, headings=imu_heading, max_col_width=130,
@@ -411,6 +458,14 @@ layout_col3= [ # [sg.Text('<Current Torque>', font=("Tahoma", 14))],
                                 key='-IMU_TABLE-',
                                 row_height=20)],
 ]
+treedata = sg.TreeData()
+layout_col4 = [[sg.Text('Roll-Pitch-Yaw Plot',
+                justification='center', font=("Tahoma", 20))],
+              [sg.Canvas(expand_x=True, expand_y=True, key='-CANVAS-'), 
+                     sg.Tree(data=treedata, headings = [], font=("Tahoma", 8),
+                             num_rows=5, col0_width=5, key='-TREE-', 
+                             row_height=60, show_expanded=True, enable_events=True)],
+]
 
 
 layout_main = [ [sg.Column(layout_col1), 
@@ -420,6 +475,9 @@ layout_main = [ [sg.Column(layout_col1),
                  sg.Column(layout_col3),
                 ],
 		[sg.HorizontalSeparator()],
+        # [sg.Column(layout_col4, expand_x=True, expand_y=True, vertical_alignment="top")],
+        # [sg.HorizontalSeparator()],
+
 		[sg.Column(command_layout)],
 ]
 
@@ -434,14 +492,12 @@ else:
     window = sg.Window('CULR Roll Balancing Control Gui', layout_main, finalize=True)
 
 #################################################################################################
-imu_cmg_data = []
-i = 1
 
-pub = rospy.Publisher('emergency', String, queue_size=10)
-rospy.init_node('emergency_pub', anonymous=True)
-
+sec_time = time.time() 
 while True:
-    event, values = window.read(timeout=100)
+    event, values = window.read(timeout=10)
+
+    
 
     if event == sg.WIN_CLOSED or event == 'Cancel': # if user closes window or clicks cancel
         for class_instance in vesc_serial_list:
@@ -508,30 +564,7 @@ while True:
             print("Select valid devices")
         elif selected_ser_name != '':
             selected_ser_class = get_serial_class_from_port_name(selected_ser_name)
-            
-            #print(len(vesc_id_data))
-
-            if selected_ser_class is not None:
-                #print(vesc_id_data)
-                # delete connected vesc list 
-                del_vesc_list(get_serial_port_name_from_class(selected_ser_class))
-                selected_ser_class.reset_controller_id_list()
-                #print(vesc_id_data)
-                window.Element('-VESC_TABLE-').Update(values=vesc_id_data)
-
-                # serial class disconnection
-                selected_ser_class.exitThread_usb = True
-                selected_ser_class.serial_name.close()
-                del_serial_class(selected_ser_class)
-                connect_flag = 0
-                on_flag = 0
-                st_data = []
-                print("VESC USB Disconnected")
-            else:
-                print("VESC Not Connected")
-
-            reset_joint_list()
-        else:
+            RAD2DEG
             print("Please select USB Port first")
  
     if event == "SCAN VESC":
@@ -622,38 +655,22 @@ while True:
             print("Please select USB Port first")
             
 #########################################################################
-            
-    if event == "IMU ON":
-        if connect_flag == 1:
-            imu_flag = 1
-            print("VESC IMU data ON")
-        
-        else:
-            print("Please select USB Port first")
-    
-    if imu_flag ==1:
-        send_cmd('G1','imu')
-        imu_status_data = selected_ser_class.get_imu_status()
-        print(imu_status_data)
-        window.Element('-IMU_TABLE-').Update(values=imu_status_data)
-    
-    if event == "IMU OFF":
-        if connect_flag == 1:
-            imu_flag = 0
-            print("VESC IMU data OFF")
-        else:
-            print("Please select USB Port first")
 
-#########################################################################
-
-    if event == "EMERGENCY":
+    if event == "All Stop":
         gimbal_flag = 0
         flywheel_flag = 0
-        pub.publish("EMERGENCY")
-        print("Emergency Stop")
+        # pub.publish("EMERGENCY")
+        print("All Stop")
+    
+    if event == "All Release":
+        send_cmd('G1', 'release')
+        send_cmd('G2', 'release')
+        send_cmd('F1', 'release')
+        send_cmd('F2', 'release')
+        print("All Stop")
 
 #########################################################################
-        
+
     if event == "Flywheel Start":
         if flywheel_state == 0:
             flywheel_flag = 1 
@@ -682,6 +699,46 @@ while True:
             
 #########################################################################
             
+    if event == "IMU ON":
+        if connect_flag == 1:
+            imu_flag = 1
+            print("VESC IMU data ON")
+        
+        else:
+            print("Please select USB Port first")
+    
+    if imu_flag ==1:
+        sec_cur_time = time.time()
+        sec =  sec_cur_time - sec_time
+        send_cmd('G1','imu')
+        imu_status_data = selected_ser_class.get_imu_status()
+        imu_cmg_data = selected_ser_class.get_imu_cmg()
+        # print(imu_status_data)
+        if j > 1:
+            # print(imu_status_data[0])
+            # print(imu_status_data[0][0])
+            # print(roll_list)
+            # sec_list.append(sec)
+            # fig = plt.figure()
+            # fig.add_subplot(111).plot(sec_list, roll_list)
+            # fig_canvas_agg = draw_figure(window['-CANVAS-'].TKCanvas, create_plot(roll_list, sec_list))
+            roll_list.append(imu_status_data[0][0])
+            x_index.append(next(index))
+            ani = FuncAnimation(plt.gcf(), animate, interval = 1)
+            plt.tight_layout()
+            plt.show()      
+        j+=1       
+        window.Element('-IMU_TABLE-').Update(values=imu_status_data)
+    
+    if event == "IMU OFF":
+        if connect_flag == 1:
+            imu_flag = 0
+            print("VESC IMU data OFF")
+        else:
+            print("Please select USB Port first")
+            
+#########################################################################
+            
     if event == "Gimbal Start":
         if gimbal_state == 0:
             gimbal_flag = 1 
@@ -690,23 +747,37 @@ while True:
             print("Gimbal already operated")
     
     if gimbal_flag == 1:
-        
-        send_cmd('G1','imu')
-        imu_cmg_data = selected_ser_class.get_imu_cmg()
+        G1_init = 242.117   
+        G2_init = 19.446
         # print(imu_cmg_data)
-        print('##################################')
-        print('roll angle: ',imu_cmg_data[0][0])
-        print('roll angular velocity: ',imu_cmg_data[0][1])
-        pos_data, rps_data = call_ecd_data()
-        print('gimbal angle: ', pos_data[0][1]/6 - 243.787)
-        print('gimbal angular velocity: ', rps_data[0][1]/6)
-        print('##################################')
-        # x_next = lqr_roll.cmg_lqr(pos_data, rps_data, imu_status_data)
+        last_time = time.time()
         
-        # send_cmd('G1', 'servo', float(x_next)*6)
-        # send_cmd('G2', 'servo', -float(x_next)*6)
-        send_cmd('G1', 'servo', 243.787 + i*6)
-        send_cmd('G2', 'servo', -342.729 - 6*i)
+        if i == 1:
+    
+            send_cmd('G1', 'servo', G1_init)
+            send_cmd('G2', 'servo', G2_init)
+        else:
+            print('##################################')
+            print('roll angle: ',imu_cmg_data[0][0])
+            print('roll angular velocity: ',imu_cmg_data[0][1]*DEG2RAD)
+            pos_data, rps_data = call_ecd_data()
+            print('gimbal angle: ', pos_data[0][1]/6 - G1_init/6)
+            print('gimbal angular velocity: ', rps_data[0][1]/6)
+            print('##################################')
+            x_next = lqr_roll.cmg_lqr(pos_data, rps_data, imu_cmg_data, G1_init, G2_init, 5000)
+            # print(x_next)
+            cur_motor = x_next / K_t
+            # float(values['-RPM-'])
+            send_cmd('G1', 'servo', -float(x_next[0]*RAD2DEG)*6 + G1_init)
+            send_cmd('G2', 'servo', float(x_next[0]*RAD2DEG)*6 + G2_init)
+            # send_cmd('G1', 'current', -cur_motor)
+            # send_cmd('G2', 'current', cur_motor)
+            
+            # send_cmd('G1', 'servo', G1_init + i*6)
+            # send_cmd('G2', 'servo', G2_init - 6*i)
+            
+        cur_time = time.time()
+        print('time: ', cur_time-last_time)
         i+=1
         
 
@@ -738,4 +809,4 @@ while True:
 
 #########################################################################
 
-    
+
