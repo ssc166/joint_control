@@ -63,12 +63,12 @@ RAD2DEG = 180/np.pi
 # rospy.init_node('emergency_pub', anonymous=True)
 
 # default about joint
-joint_list = ['G1', 'G2', 'F2']
-# joint_list = ['G1']
+# joint_list = ['G1', 'G2', 'F2']
+joint_list = ['G1']
 
 joint_original_tuple = tuple(joint_list)
-vesc_joint_match = {1:'G1', 2:'G2', 4:'F2'} # dictionary type, ID:'Joint Number'
-# vesc_joint_match = {1:'G1'} # dictionary type, ID:'Joint Number'
+# vesc_joint_match = {1:'G1', 2:'G2', 4:'F2'} # dictionary type, ID:'Joint Number'
+vesc_joint_match = {3:'G1'} # dictionary type, ID:'Joint Number'
 
 global vesc_id_data
 refresh_list_flag = False
@@ -775,13 +775,13 @@ while True:
             send_cmd('G1', 'servo', G1_init)
             send_cmd('G2', 'servo', G2_init)
         else:
-            print('##################################')
-            print('roll angle: ',imu_cmg_data[0][0])
-            print('roll angular velocity: ',imu_cmg_data[0][1]*DEG2RAD)
+            # print('##################################')
+            # print('roll angle: ',imu_cmg_data[0][0])
+            # print('roll angular velocity: ',imu_cmg_data[0][1]*DEG2RAD)
             pos_data, rps_data = call_ecd_data()
-            print('gimbal angle: ', pos_data[0][1]/6 - G1_init/6)
-            print('gimbal angular velocity: ', rps_data[0][1]/6)
-            print('##################################')
+            # print('gimbal angle: ', pos_data[0][1]/6 - G1_init/6)
+            # print('gimbal angular velocity: ', rps_data[0][1]/6)
+            # print('##################################')
             x_next = lqr_roll.cmg_lqr(pos_data, rps_data, imu_cmg_data, G1_init, G2_init, 5000)
             # print(x_next)
             # cur_motor = x_next / K_t

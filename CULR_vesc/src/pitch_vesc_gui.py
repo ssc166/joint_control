@@ -8,10 +8,9 @@ import rospy
 import os
 from std_msgs.msg import Float64, Float64MultiArray, String
 from gazebo_msgs.srv import GetModelState, GetLinkState
-from sensor_msgs.msg import JointState
+from sensor_msgs.msg import Imu
 from geometry_msgs.msg import *
 import pylab as pl
-import control
 import matplotlib.pyplot as plt
 import state_equation_roll as ser
 import WIP_utils as utils
@@ -23,12 +22,14 @@ import platform
 from PySimpleGUI.PySimpleGUI import T
 import serial
 import time
-import csv
-import logging
 import matplotlib.pyplot as plt
 import numpy as np
 from openrobot_vesc_pyserial import vesc_pyserial as vs
 from threading import Timer
+from tkinter.font import ROMAN
+from itertools import count
+import mpc_pitch
+import Cal_joint as cj
 
 ######################### Class Init #########################
 # default serial
@@ -41,29 +42,36 @@ height = ('0.889','0.969','1.069','1.146')
 tout = 0.5
 
 # default about joint
-joint_list = ['Wheel', 'Ankle_Pitch', 'Ankle_Roll', 'Knee', 'Hip_Pitch', 'Hip_Roll', 'F2']
+joint_list = ['Wheel', 'Ankle_Pitch', 'Ankle_Roll', 'Knee', 'Hip_Pitch', 'Hip_Roll']
 # joint_list = ['F2']
 
 joint_original_tuple = tuple(joint_list)
-vesc_joint_match = {11:'Wheel', 22:'Ankle_Pitch', 33:'Ankle_Roll', 44:'Knee', 55:'Hip_Pitch', 66:'Hip_Roll', 4:'F2'} # dictionary type, ID:'Joint Number'
+vesc_joint_match = {11:'Wheel', 22:'Ankle_Pitch', 33:'Ankle_Roll', 44:'Knee', 55:'Hip_Pitch', 66:'Hip_Roll'} # dictionary type, ID:'Joint Number'
 # vesc_joint_match = {4:'F2'} # dictionary type, ID:'Joint Number'
-
+RAD2DEG = 180/np.pi 
 
 
 global vesc_id_data
 refresh_list_flag = False
 vesc_serial_list = []
+roll_list = []
+index = count()
+
+x_index = []
+y = []
 
 connect_flag = 0
 on_flag = 0
-flywheel_flag = 0
+balancing_flag = 0
 gimbal_flag = 0
+pos_flag = 0
+joint_table_flag = 0
+joint_state_flag = 0
 
 st_data = []
 Gr_mode = False
 tor_mode = False
-flywheel_state = 0
-gimbal_state = 0
+balancing_state = 0
 
 
 def get_serial_port_name_from_class(s_class):
@@ -281,11 +289,40 @@ def send_cmd(joint_number, cmd, value=0):
     else:
         print(joint_number, "is Not Connected")
         
-def call_ecd_data():
-    send_cmd('J1','request')
-    data = selected_ser_class.get_ecd_value()
-    return data
+def call_wheel_ecd_data():
+    send_cmd('Wheel','request')
+    pos_w_data = selected_ser_class.get_ecd_value()
+    rps_w_data = selected_ser_class.get_rps_value()
+    return pos_w_data, rps_w_data
 
+def call_ankle_pitch_ecd_data():
+    send_cmd('Ankle_Pitch','request')
+    pos_ap_data = selected_ser_class.get_ecd_value()
+    rps_ap_data = selected_ser_class.get_rps_value()
+    return pos_ap_data, rps_ap_data
+
+def call_ankle_roll_ecd_data():
+    send_cmd('Ankle_Roll','request')
+    pos_ar_data = selected_ser_class.get_ecd_value()
+    rps_ar_data = selected_ser_class.get_rps_value()
+    return pos_ar_data, rps_ar_data
+
+def call_knee_ecd_data():
+    send_cmd('Knee','request')
+    pos_kn_data = selected_ser_class.get_ecd_value()
+    rps_kn_data = selected_ser_class.get_rps_value()
+    return pos_kn_data, rps_kn_data
+def call_hip_pitch_ecd_data():
+    send_cmd('Hip_Pitch','request')
+    pos_hp_data = selected_ser_class.get_ecd_value()
+    rps_hp_data = selected_ser_class.get_rps_value()
+    return pos_hp_data, rps_hp_data
+
+def call_hip_roll_ecd_data():
+    send_cmd('Hip_Roll','request')
+    pos_hr_data = selected_ser_class.get_ecd_value()
+    rps_hr_data = selected_ser_class.get_rps_value()
+    return pos_hr_data, rps_hr_data
 # def adjust_joint_limit(joint_range_i, joint_range_j, keyhere):
 #     layout_subwin2_1 = [ [sg.Text(keyhere)],
 #                          [sg.InputText(joint_range[joint_range_i][joint_range_j], key=keyhere), sg.Button('Ok', bind_return_key=True)]
@@ -311,6 +348,8 @@ ports_data = scan_serial_ports()
 # vesc id table data
 vesc_id_data = []
 vesc_id_headings = ["Port","ID","COMM", "Joint"]
+time_data = []
+time_heading = ["Time Step"]
 layout_col1 = [ [sg.Text('<VESC USB>', font=("Tahoma", 16))],
                 [sg.Table(values=ports_data, headings=ports_title, max_col_width=100,
                                 col_widths=[12,11],
@@ -339,6 +378,15 @@ layout_col1 = [ [sg.Text('<VESC USB>', font=("Tahoma", 16))],
                                 key='-VESC_TABLE-',
                                 row_height=50)],
                 [sg.Button('SCAN VESC'), sg.Button('Refresh List')],
+                [sg.Table(values=time_data,headings=time_heading, max_col_width=1000,
+                                                            background_color='black',
+                                                            auto_size_columns=False,
+                                                            display_row_numbers=False,
+                                                            justification='center',
+                                                            num_rows=1,
+                                                            alternating_row_color='black',
+                                                            key='-TIME_TABLE-',
+                                                            row_height=30)],
                 #[sg.HorizontalSeparator()],
 ]
 
@@ -362,11 +410,23 @@ defualt_task = [0, 0, 803, 0, 0, 0]
 size_bar_joint = (21.5,20)
 size_bar_task = (30,20)
 
-status_data = []
-status_heading = ["ID", "rps", "curr_A", "motor_temp"]
+joint_data = []
+joint_heading = ["Height", "Ankle", "Knee", "Hip"]
 size_input = (10,None)
 layout_col2 = [ [sg.Text('<Balancing Control Setup>', font=("Tahoma", 16))],
-                [sg.Text('Height', size=(8,1)), sg.Combo(size=(5,1), values=height, default_value='0.969', readonly=True, k='-height-'), sg.Button('Initial Position', size=(15,1))],
+                [sg.Text('Height', size=(8,1)), sg.Combo(size=(5,1), values=height, default_value='0.969', readonly=True, k='-HEIGHT-'), sg.Button('Initial Position', size=(15,1))],
+                [sg.Text('<Desired Joint Angle from Height [deg]>', font=("Tahoma", 16))],
+                [sg.Table(values=joint_data, headings=joint_heading, max_col_width=130,
+                                background_color='black',
+                                col_widths=[15,15,15,15],
+                                auto_size_columns=False,
+                                display_row_numbers=False,
+                                justification='center',
+                                num_rows=1,
+                                alternating_row_color='black',
+                                key='-JOINT_TABLE-',
+                                row_height=30)],
+                [sg.HorizontalSeparator()],
                 [sg.Button('Balancing Start', size=(15,1)), sg.Button('Balancing Stop', size=(15,1), key='-Stop-'), sg.Button('All Release', size=(15,1))],
                 [sg.Text('<Joint Servo Control [deg]>', font=("Tahoma", 16))],
                 [sg.Text(joint_list[1]), sg.Text(" "), 
@@ -389,8 +449,16 @@ layout_col2 = [ [sg.Text('<Balancing Control Setup>', font=("Tahoma", 16))],
                  sg.Text(joint_range[4][0], enable_events=True, key='-JOINT5_MIN-', size=(8,1)), 
                  sg.Slider(range = [joint_range[4][0], joint_range[4][1]], default_value = default_pos[4], size = size_bar_joint, orientation='h', enable_events=True, key='-JOINT5-'), 
                  sg.Text(joint_range[4][1], enable_events=True, key='-JOINT5_MAX-', size=(8,1)), sg.Button('Hip Roll Release', size=(18,1))],
-                [sg.HorizontalSeparator()],
-                [sg.Text('<Status>', font=("Tahoma", 16)), sg.Button('ON'), sg.Button('OFF')],
+                
+                
+]
+
+status_data = []
+status_heading = ["ID", "rps", "curr_A", "motor_temp"]
+imu_data = []
+imu_heading = ["theta_1", "theta_b"]
+imu_status_data = []
+layout_col3= [ [sg.Text('<Status>', font=("Tahoma", 15)), sg.Button('ON'), sg.Button('OFF')],
                 [sg.Table(values=status_data, headings=status_heading, max_col_width=130,
                                 background_color='black',
                                 col_widths=[6,12,12,13],
@@ -401,29 +469,26 @@ layout_col2 = [ [sg.Text('<Balancing Control Setup>', font=("Tahoma", 16))],
                                 alternating_row_color='black',
                                 key='-STATUS_TABLE-',
                                 row_height=20)],
-]
-
-imu_data = []
-imu_heading = [""]
-layout_col3= [ # [sg.Text('<Current Torque>', font=("Tahoma", 14))],
-                [sg.Text('<IMU Status>', font=("Tahoma", 15)), sg.Button('ON'), sg.Button('OFF')],
-                [sg.Table(values=status_data, headings=status_heading, max_col_width=130,
+                [sg.HorizontalSeparator()],
+                [sg.Text('<Wheel-Ankle Pos>', font=("Tahoma", 15)), sg.Button('Pos ON'), sg.Button('Pos OFF')],
+                [sg.Table(values=imu_status_data, headings=imu_heading, max_col_width=130,
                                 background_color='black',
-                                col_widths=[6,12,12,13],
+                                col_widths=[15,15],
                                 auto_size_columns=False,
                                 display_row_numbers=False,
                                 justification='center',
                                 num_rows=8,
                                 alternating_row_color='black',
-                                key='-IMU_TABLE-',
-                                row_height=20)],
+                                key='-POS_TABLE-',
+                                row_height=10)],
 ]
 
 
 layout_main = [ [sg.Column(layout_col1), 
                  sg.VSeparator(),
 		         sg.Column(layout_col2),
-
+                 sg.VSeparator(),
+                 sg.Column(layout_col3),
                 ],
 		[sg.HorizontalSeparator()],
 		[sg.Column(command_layout)],
@@ -439,29 +504,36 @@ if platform.system() == "Linux" and platform.architecture()[1] == "ELF":
 else:
     window = sg.Window('CULR Pitch Balancing Control Gui', layout_main, finalize=True)
     
-def callback(data):
-    global emergency
+def Imucallback(msg):
+    global roll
+    global roll_vel
     
-    emergency = data.data
-    print(emergency)
-    # print(data)
-    # window['-Stop-'].update('')
-    # if event == data:
-    # event = " Balancing Stop"
-    # if event == " Balancing Stop":
-    #     flywheel_flag = 0
+    roll, pitch, yaw = utils.quaternion_to_euler_angle(msg.orientation) 
+    roll_vel = msg.angular_velocity.x
     
-    
-    # print("All Stop")
+    # roll_list.append(roll)
 
-def listener():
-    rospy.init_node('emergency_sub', anonymous=True)
-    rospy.Subscriber('emergency', String, callback)
-    # rospy.spin()
-#################################################################################################
+    # x_index.append(next(index))
+
+    # print(x_acc_list)
+    # print(y_acc_list)
+    # print(z_acc_list)
+    # print(msg.orientation.y)
     
+i = 1
+j = 1
+#################################################################################################
+cur_time = time.time()  
+sec_time = time.time() 
+
 while True:
-    event, values = window.read(timeout=100)
+    event, values = window.read(timeout=1)
+    
+    last_time = cur_time
+    cur_time = time.time()
+    time_data = [cur_time-last_time]
+    window.Element('-TIME_TABLE-').Update(values=time_data)
+    
 
     if event == sg.WIN_CLOSED or event == 'Cancel': # if user closes window or clicks cancel
         for class_instance in vesc_serial_list:
@@ -630,7 +702,7 @@ while True:
     
     if on_flag ==1:
         
-        send_cmd('F2','request')
+        send_cmd('Wheel','request')
         st_data = selected_ser_class.get_status_data()
         # print(st_data)
         window.Element('-STATUS_TABLE-').Update(values=st_data)
@@ -643,37 +715,124 @@ while True:
             print("Please select USB Port first")
 
 #########################################################################
-    listener()
+
+    if event == "Initial Position":
+        if balancing_state == 0:
+            balancing_flag = 2
+            joint_table_flag = 1
+            joint_state_flag = 1
+            if j == 1:
+                h = float(values['-HEIGHT-'])
+                thetalistd = cj.get_init_pos(h)
+            else:
+                pass
+        j+=1
+            
+    if joint_table_flag == 1:
+        window.Element('-JOINT_TABLE-').Update(values=thetalistd)
+        
+    if balancing_flag == 2:
+        send_cmd('Ankle_Pitch', 'servo', thetalistd[1])
+        send_cmd('Ankle_Roll', 'servo', 0)
+        send_cmd('Knee', 'servo', thetalistd[2])
+        send_cmd('Hip_Pitch', 'servo', thetalistd[3])
+        send_cmd('Hip_Roll', 'servo', 0)
+    
+    if joint_state_flag == 1:
+        ankle_pitch_pos, ankle_pitch_vel = call_ankle_pitch_ecd_data()
+        ankle_roll_pos, ankle_prollvel = call_ankle_roll_ecd_data()
+        knee_pos, knee_vel = call_knee_ecd_data()
+        hip_pitch_pos, hip_pitch_vel = call_hip_pitch_ecd_data()
+        hip_roll_pos, hip_roll_vel = call_hip_roll_ecd_data()
+        
+        window.Element("-JOINT1-").Update(ankle_pitch_pos[0][0])
+        window.Element("-JOINT2-").Update(ankle_roll_pos[0][0])
+        window.Element("-JOINT3-").Update(knee_pos[0][0])
+        window.Element("-JOINT4-").Update(hip_pitch_pos[0][0])
+        window.Element("-JOINT5-").Update(hip_roll_pos[0][0])
+        
+        
+#########################################################################
     
     if event == "Balancing Start":
-        if flywheel_state == 0:
-            flywheel_flag = 1 
-            print("Flywheel spinned")
+        if balancing_state == 0:
+            balancing_flag = 1 
+            print("Balancing started")
         else :
-            print("Flywheel already spinned")
+            print("Balancing already started")
     
-    if flywheel_flag == 1:
-        
-        send_cmd('F2', 'dps', 500)
+    if balancing_flag == 1:
+        rospy.init_node('Imu_read', anonymous=True)
+        imu_sub = rospy.Subscriber('/imu/data_raw', Imu, Imucallback)
+        wheel_pos, wheel_vel = call_wheel_ecd_data()
+        ankle_pos, ankle_vel = call_ankle_pitch_ecd_data()
+        if i < 2:
+            mpc_model, estimator, u = mpc_pitch.pitch_mpc_init(roll, roll_vel, wheel_vel, ankle_pos, ankle_vel)
+            send_cmd('Wheel', 'servo', u[0])
+            send_cmd('Ankle_Pitch', 'servo', u[1])
+        else:
+            u = mpc_pitch.pitch_mpc(roll, roll_vel, wheel_vel, ankle_pos, ankle_vel, mpc_model, estimator)
+            send_cmd('Wheel', 'servo', u[0])
+            send_cmd('Ankle_Pitch', 'servo', u[1])
+        i += 1
 
     if event == "-Stop-":
-        if flywheel_state == 0:
-                flywheel_flag = 0 
-                print("Flywheel stopped")
+        if balancing_state == 0:
+                balancing_flag = 0 
+                print("Balancing stopped")
         else :
-            print("Flywheel already stopped")
-            
-    if event == "Flywheel Release":
-            flywheel_flag = 0 
-            send_cmd('F1', 'release')
-            send_cmd('F2', 'release')
-            
-#########################################################################
+            print("Balancing already stopped")
             
     if event == "All Release":
-        flywheel_flag = 0 
-        send_cmd('F2', 'release')
+        balancing_flag = 0 
+        send_cmd('Wheel', 'release')
+        send_cmd('Ankle_Pitch', 'release')
+        send_cmd('Ankle_Roll', 'release')
+        send_cmd('Knee', 'release')
+        send_cmd('Hip_Pitch', 'release')
+        send_cmd('Hip_Roll', 'release')
         
+    if event == "Pos ON":
+        if connect_flag ==1:
+            pos_flag = 1
+        
+    if pos_flag == 1:
+        theta_pos = [roll, roll + ankle_pos]
+        window.Element("-POS_TABLE-").Update(theta_pos)
+        
+    if event == "Pos OFF":
+        if connect_flag ==1:
+            pos_flag = 0
+            
+    if event == "Wheel Release":
+        balancing_flag = 0 
+        send_cmd('Wheel', 'release')
+
+    if event == "Ankle_Pitch Release":
+        balancing_flag = 0 
+        send_cmd('Ankle_Pitch', 'release')
+        
+    if event == "Ankle_Roll Release":
+        balancing_flag = 0 
+        send_cmd('Ankle_Roll', 'release')
+        
+    if event == "Knee Release":
+        balancing_flag = 0 
+        send_cmd('Knee', 'release')
+        
+    if event == "Hip_Pitch Release":
+        balancing_flag = 0 
+        send_cmd('Hip_Pitch', 'release')
+        
+    if event == "Hip_Roll Release":
+        balancing_flag = 0 
+        send_cmd('Hip_Roll', 'release')
+        
+    
+            
 #########################################################################
+
+        
+
 
 

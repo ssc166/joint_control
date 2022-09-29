@@ -42,7 +42,7 @@ def get_init_pos(h):
     q3 = theta_3-theta_2
     q4 = np.pi/2- theta_3
 
-    thetalistd = np.array([q2, q3, q4])
+    thetalistd = np.array([h, q2, q3, q4])
     
     return thetalistd
 
