@@ -46,7 +46,7 @@ joint_list = ['Wheel', 'Ankle_Pitch', 'Ankle_Roll', 'Knee', 'Hip_Pitch', 'Hip_Ro
 # joint_list = ['F2']
 
 joint_original_tuple = tuple(joint_list)
-vesc_joint_match = {11:'Wheel', 22:'Ankle_Pitch', 33:'Ankle_Roll', 44:'Knee', 55:'Hip_Pitch', 66:'Hip_Roll'} # dictionary type, ID:'Joint Number'
+vesc_joint_match = {3:'Wheel', 22:'Ankle_Pitch', 33:'Ankle_Roll', 44:'Knee', 55:'Hip_Pitch', 66:'Hip_Roll'} # dictionary type, ID:'Joint Number'
 # vesc_joint_match = {4:'F2'} # dictionary type, ID:'Joint Number'
 RAD2DEG = 180/np.pi 
 
@@ -411,18 +411,18 @@ size_bar_joint = (21.5,20)
 size_bar_task = (30,20)
 
 joint_data = []
-joint_heading = ["Height", "Ankle", "Knee", "Hip"]
+joint_heading = ["", "Ankle", "Knee", "Hip"]
 size_input = (10,None)
 layout_col2 = [ [sg.Text('<Balancing Control Setup>', font=("Tahoma", 16))],
                 [sg.Text('Height', size=(8,1)), sg.Combo(size=(5,1), values=height, default_value='0.969', readonly=True, k='-HEIGHT-'), sg.Button('Initial Position', size=(15,1))],
                 [sg.Text('<Desired Joint Angle from Height [deg]>', font=("Tahoma", 16))],
                 [sg.Table(values=joint_data, headings=joint_heading, max_col_width=130,
                                 background_color='black',
-                                col_widths=[15,15,15,15],
+                                col_widths=[10,15,15, 15],
                                 auto_size_columns=False,
                                 display_row_numbers=False,
                                 justification='center',
-                                num_rows=1,
+                                num_rows=2,
                                 alternating_row_color='black',
                                 key='-JOINT_TABLE-',
                                 row_height=30)],
@@ -722,34 +722,37 @@ while True:
             joint_table_flag = 1
             joint_state_flag = 1
             if j == 1:
-                h = float(values['-HEIGHT-'])
+                h = np.round(float(values['-HEIGHT-'])-0.069,1)
                 thetalistd = cj.get_init_pos(h)
             else:
                 pass
         j+=1
-            
+              
     if joint_table_flag == 1:
-        window.Element('-JOINT_TABLE-').Update(values=thetalistd)
+        # thetalist_1 = [["Current", 1, 2, 3]]
+        thetalist = [["Desired", float(thetalistd[0])*RAD2DEG, float(thetalistd[1])*RAD2DEG, float(thetalistd[2])*RAD2DEG],
+                     ["Current", 1, 2, 3]]
+        window.Element('-JOINT_TABLE-').Update(values=thetalist)
         
-    if balancing_flag == 2:
-        send_cmd('Ankle_Pitch', 'servo', thetalistd[1])
-        send_cmd('Ankle_Roll', 'servo', 0)
-        send_cmd('Knee', 'servo', thetalistd[2])
-        send_cmd('Hip_Pitch', 'servo', thetalistd[3])
-        send_cmd('Hip_Roll', 'servo', 0)
+    # if balancing_flag == 2:
+    #     send_cmd('Ankle_Pitch', 'servo', thetalistd[1])
+    #     send_cmd('Ankle_Roll', 'servo', 0)
+    #     send_cmd('Knee', 'servo', thetalistd[2])
+    #     send_cmd('Hip_Pitch', 'servo', thetalistd[3])
+    #     send_cmd('Hip_Roll', 'servo', 0)
     
-    if joint_state_flag == 1:
-        ankle_pitch_pos, ankle_pitch_vel = call_ankle_pitch_ecd_data()
-        ankle_roll_pos, ankle_prollvel = call_ankle_roll_ecd_data()
-        knee_pos, knee_vel = call_knee_ecd_data()
-        hip_pitch_pos, hip_pitch_vel = call_hip_pitch_ecd_data()
-        hip_roll_pos, hip_roll_vel = call_hip_roll_ecd_data()
+    # if joint_state_flag == 1:
+    #     ankle_pitch_pos, ankle_pitch_vel = call_ankle_pitch_ecd_data()
+    #     ankle_roll_pos, ankle_prollvel = call_ankle_roll_ecd_data()
+    #     knee_pos, knee_vel = call_knee_ecd_data()
+    #     hip_pitch_pos, hip_pitch_vel = call_hip_pitch_ecd_data()
+    #     hip_roll_pos, hip_roll_vel = call_hip_roll_ecd_data()
         
-        window.Element("-JOINT1-").Update(ankle_pitch_pos[0][0])
-        window.Element("-JOINT2-").Update(ankle_roll_pos[0][0])
-        window.Element("-JOINT3-").Update(knee_pos[0][0])
-        window.Element("-JOINT4-").Update(hip_pitch_pos[0][0])
-        window.Element("-JOINT5-").Update(hip_roll_pos[0][0])
+    #     window.Element("-JOINT1-").Update(ankle_pitch_pos[0][0])
+    #     window.Element("-JOINT2-").Update(ankle_roll_pos[0][0])
+    #     window.Element("-JOINT3-").Update(knee_pos[0][0])
+    #     window.Element("-JOINT4-").Update(hip_pitch_pos[0][0])
+    #     window.Element("-JOINT5-").Update(hip_roll_pos[0][0])
         
         
 #########################################################################

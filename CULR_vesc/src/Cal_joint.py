@@ -5,7 +5,7 @@ import math
 import numpy as np
 import WIP_utils as utils
 
-
+RAD2DEG = 180 / np.pi
 def get_init_pos(h):
     
 
@@ -42,7 +42,7 @@ def get_init_pos(h):
     q3 = theta_3-theta_2
     q4 = np.pi/2- theta_3
 
-    thetalistd = np.array([h, q2, q3, q4])
+    thetalistd = [q2, q3, q4]
     
     return thetalistd
 
