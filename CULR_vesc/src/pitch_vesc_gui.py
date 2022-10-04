@@ -46,7 +46,7 @@ joint_list = ['Wheel', 'Ankle_Pitch', 'Ankle_Roll', 'Knee', 'Hip_Pitch', 'Hip_Ro
 # joint_list = ['F2']
 
 joint_original_tuple = tuple(joint_list)
-vesc_joint_match = {3:'Wheel', 22:'Ankle_Pitch', 33:'Ankle_Roll', 44:'Knee', 55:'Hip_Pitch', 66:'Hip_Roll'} # dictionary type, ID:'Joint Number'
+vesc_joint_match = {1:'Wheel', 2:'Ankle_Pitch', 33:'Ankle_Roll', 44:'Knee', 55:'Hip_Pitch', 66:'Hip_Roll'} # dictionary type, ID:'Joint Number'
 # vesc_joint_match = {4:'F2'} # dictionary type, ID:'Joint Number'
 RAD2DEG = 180/np.pi 
 
@@ -67,6 +67,7 @@ gimbal_flag = 0
 pos_flag = 0
 joint_table_flag = 0
 joint_state_flag = 0
+joint_flag = 0
 
 st_data = []
 Gr_mode = False
@@ -414,7 +415,7 @@ joint_data = []
 joint_heading = ["", "Ankle", "Knee", "Hip"]
 size_input = (10,None)
 layout_col2 = [ [sg.Text('<Balancing Control Setup>', font=("Tahoma", 16))],
-                [sg.Text('Height', size=(8,1)), sg.Combo(size=(5,1), values=height, default_value='0.969', readonly=True, k='-HEIGHT-'), sg.Button('Initial Position', size=(15,1))],
+                [sg.Text('Height', size=(8,1)), sg.Combo(size=(5,1), values=height, default_value='0.969', readonly=True, k='-HEIGHT-'), sg.Button('Initial Position', size=(15,1)), sg.Button('init on', size=(15,1)), sg.Button('init off', size=(15,1))],
                 [sg.Text('<Desired Joint Angle from Height [deg]>', font=("Tahoma", 16))],
                 [sg.Table(values=joint_data, headings=joint_heading, max_col_width=130,
                                 background_color='black',
@@ -426,9 +427,9 @@ layout_col2 = [ [sg.Text('<Balancing Control Setup>', font=("Tahoma", 16))],
                                 alternating_row_color='black',
                                 key='-JOINT_TABLE-',
                                 row_height=30)],
-                [sg.HorizontalSeparator()],
                 [sg.Button('Balancing Start', size=(15,1)), sg.Button('Balancing Stop', size=(15,1), key='-Stop-'), sg.Button('All Release', size=(15,1))],
-                [sg.Text('<Joint Servo Control [deg]>', font=("Tahoma", 16))],
+                [sg.HorizontalSeparator()],
+                [sg.Text('<Joint Servo Control [deg]>', font=("Tahoma", 16)), sg.Button('state on', size=(15,1)), sg.Button('state off', size=(15,1))],
                 [sg.Text(joint_list[1]), sg.Text(" "), 
                  sg.Text(joint_range[0][0], enable_events=True, key='-JOINT1_MIN-', size=(8,1)), 
                  sg.Slider(range = [joint_range[0][0], joint_range[0][1]], default_value = default_pos[0], size = size_bar_joint, orientation='h', enable_events=True, key='-JOINT1-'), 
@@ -510,6 +511,9 @@ def Imucallback(msg):
     
     roll, pitch, yaw = utils.quaternion_to_euler_angle(msg.orientation) 
     roll_vel = msg.angular_velocity.x
+
+    print(roll)
+    time.sleep(0.1)
     
     # roll_list.append(roll)
 
@@ -718,28 +722,48 @@ while True:
 
     if event == "Initial Position":
         if balancing_state == 0:
-            balancing_flag = 2
-            joint_table_flag = 1
-            joint_state_flag = 1
             if j == 1:
                 h = np.round(float(values['-HEIGHT-'])-0.069,1)
                 thetalistd = cj.get_init_pos(h)
+                thetalist = [["Desired", float(thetalistd[0])*RAD2DEG, float(thetalistd[1])*RAD2DEG, float(thetalistd[2])*RAD2DEG],
+                     ["Current"]]
+                window.Element('-JOINT_TABLE-').Update(values=thetalist)
             else:
                 pass
-        j+=1
-              
-    if joint_table_flag == 1:
-        # thetalist_1 = [["Current", 1, 2, 3]]
-        thetalist = [["Desired", float(thetalistd[0])*RAD2DEG, float(thetalistd[1])*RAD2DEG, float(thetalistd[2])*RAD2DEG],
-                     ["Current", 1, 2, 3]]
-        window.Element('-JOINT_TABLE-').Update(values=thetalist)
+        j+=1   
+
+    if event == "init on":
+        joint_flag = 1 
         
-    # if balancing_flag == 2:
-    #     send_cmd('Ankle_Pitch', 'servo', thetalistd[1])
+    if event == "init off":
+        joint_flag = 0 
+
+    if joint_flag == 1:
+        wheel_init = 245.81
+        ankle_pitch_init = 875.48
+        wheel_pos, wheel_vel = call_wheel_ecd_data()
+        ankle_pitch_pos, ankle_pitch_vel = call_ankle_pitch_ecd_data()
+        send_cmd('Wheel', 'servo', wheel_init + float(thetalistd[0])*RAD2DEG*6)
+        send_cmd('Ankle_Pitch', 'servo', ankle_pitch_init + float(thetalistd[1])*RAD2DEG*6)
+        time.sleep(0.01)
     #     send_cmd('Ankle_Roll', 'servo', 0)
     #     send_cmd('Knee', 'servo', thetalistd[2])
     #     send_cmd('Hip_Pitch', 'servo', thetalistd[3])
     #     send_cmd('Hip_Roll', 'servo', 0)
+        
+        # ankle_pitch_pos, ankle_pitch_vel = call_ankle_pitch_ecd_data()
+        
+        # print('ankle: ', ankle_pitch_pos)
+        # print('wheel: ',wheel_pos)
+        thetalist = [["Desired", float(thetalistd[0])*RAD2DEG, float(thetalistd[1])*RAD2DEG, float(thetalistd[2])*RAD2DEG],
+                     ["Current", (wheel_pos[0][1]/6+float(thetalistd[0])*RAD2DEG)-wheel_init/6, (ankle_pitch_pos[0][1]/6 + float(thetalistd[1])*RAD2DEG)-ankle_pitch_init/6, 3]]
+        window.Element('-JOINT_TABLE-').Update(values=thetalist)
+
+    if event == "state on":
+        joint_state_flag = 1 
+        
+    if event == "state off":
+        joint_state_flag = 0 
     
     # if joint_state_flag == 1:
     #     ankle_pitch_pos, ankle_pitch_vel = call_ankle_pitch_ecd_data()
@@ -767,16 +791,18 @@ while True:
     if balancing_flag == 1:
         rospy.init_node('Imu_read', anonymous=True)
         imu_sub = rospy.Subscriber('/imu/data_raw', Imu, Imucallback)
-        wheel_pos, wheel_vel = call_wheel_ecd_data()
-        ankle_pos, ankle_vel = call_ankle_pitch_ecd_data()
-        if i < 2:
-            mpc_model, estimator, u = mpc_pitch.pitch_mpc_init(roll, roll_vel, wheel_vel, ankle_pos, ankle_vel)
-            send_cmd('Wheel', 'servo', u[0])
-            send_cmd('Ankle_Pitch', 'servo', u[1])
-        else:
-            u = mpc_pitch.pitch_mpc(roll, roll_vel, wheel_vel, ankle_pos, ankle_vel, mpc_model, estimator)
-            send_cmd('Wheel', 'servo', u[0])
-            send_cmd('Ankle_Pitch', 'servo', u[1])
+        # global roll
+        # print('theta_1: ', roll)
+        # wheel_pos, wheel_vel = call_wheel_ecd_data()
+        # ankle_pos, ankle_vel = call_ankle_pitch_ecd_data()
+        # if i < 2:
+        #     mpc_model, estimator, u = mpc_pitch.pitch_mpc_init(roll, roll_vel, wheel_vel, ankle_pos, ankle_vel)
+        #     send_cmd('Wheel', 'servo', u[0])
+        #     send_cmd('Ankle_Pitch', 'servo', u[1])
+        # else:
+        #     u = mpc_pitch.pitch_mpc(roll, roll_vel, wheel_vel, ankle_pos, ankle_vel, mpc_model, estimator)
+        #     send_cmd('Wheel', 'servo', u[0])
+        #     send_cmd('Ankle_Pitch', 'servo', u[1])
         i += 1
 
     if event == "-Stop-":
@@ -790,18 +816,18 @@ while True:
         balancing_flag = 0 
         send_cmd('Wheel', 'release')
         send_cmd('Ankle_Pitch', 'release')
-        send_cmd('Ankle_Roll', 'release')
-        send_cmd('Knee', 'release')
-        send_cmd('Hip_Pitch', 'release')
-        send_cmd('Hip_Roll', 'release')
+        # send_cmd('Ankle_Roll', 'release')
+        # send_cmd('Knee', 'release')
+        # send_cmd('Hip_Pitch', 'release')
+        # send_cmd('Hip_Roll', 'release')
         
     if event == "Pos ON":
         if connect_flag ==1:
             pos_flag = 1
         
-    if pos_flag == 1:
-        theta_pos = [roll, roll + ankle_pos]
-        window.Element("-POS_TABLE-").Update(theta_pos)
+    # if pos_flag == 1:
+    #     theta_pos = [roll, roll + ankle_pos]
+    #     window.Element("-POS_TABLE-").Update(theta_pos)
         
     if event == "Pos OFF":
         if connect_flag ==1:

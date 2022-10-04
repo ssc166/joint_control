@@ -63,12 +63,12 @@ RAD2DEG = 180/np.pi
 # rospy.init_node('emergency_pub', anonymous=True)
 
 # default about joint
-# joint_list = ['G1', 'G2', 'F2']
-joint_list = ['G1']
+joint_list = ['G1', 'G2', 'F1','F2']
+# joint_list = ['G1']
 
 joint_original_tuple = tuple(joint_list)
-# vesc_joint_match = {1:'G1', 2:'G2', 4:'F2'} # dictionary type, ID:'Joint Number'
-vesc_joint_match = {3:'G1'} # dictionary type, ID:'Joint Number'
+vesc_joint_match = {1:'G1', 2:'G2', 3:'F1', 4:'F2'} # dictionary type, ID:'Joint Number'
+# vesc_joint_match = {3:'G1'} # dictionary type, ID:'Joint Number'
 
 global vesc_id_data
 refresh_list_flag = False
@@ -609,6 +609,27 @@ while True:
     if event == "Clear":
         window['-OUTPUT-'].update(value='')
 
+    if event == "ON":
+        if connect_flag == 1:
+            on_flag = 1
+            print("VESC Status data ON")
+        
+        else:
+            print("Please select USB Port first")
+    
+    if on_flag ==1:
+        send_cmd('G1','requast')
+        st_data = selected_ser_class.get_status_data()
+        # print(st_data)
+        window.Element('-STATUS_TABLE-').Update(values=st_data)
+    
+    if event == "OFF":
+        if connect_flag == 1:
+            on_flag = 0
+            print("VESC Status data OFF")
+        else:
+            print("Please select USB Port first")
+
     if event == "DEBUG PRINT ON":
         selected_ser_class = get_serial_class_from_port_name(selected_ser_name)
         selected_ser_class.debug_print_get_value_return = True
@@ -650,26 +671,7 @@ while True:
         else:
             sg.Popup("All Joint selected")
         
-    if event == "ON":
-        if connect_flag == 1:
-            on_flag = 1
-            print("VESC Status data ON")
-        
-        else:
-            print("Please select USB Port first")
     
-    if on_flag ==1:
-        send_cmd('G1','requast')
-        st_data = selected_ser_class.get_status_data()
-        # print(st_data)
-        window.Element('-STATUS_TABLE-').Update(values=st_data)
-    
-    if event == "OFF":
-        if connect_flag == 1:
-            on_flag = 0
-            print("VESC Status data OFF")
-        else:
-            print("Please select USB Port first")
             
 #########################################################################
 
@@ -765,8 +767,8 @@ while True:
             print("Gimbal already operated")
     
     if gimbal_flag == 1:
-        G1_init = 242.117   
-        G2_init = 19.446
+        G1_init = 245.83 
+        G2_init = 1097.380
         # print(imu_cmg_data)
         
         
@@ -788,6 +790,7 @@ while True:
             # float(values['-RPM-'])
             send_cmd('G1', 'servo', -float(x_next[0]*RAD2DEG)*6 + G1_init)
             send_cmd('G2', 'servo', float(x_next[0]*RAD2DEG)*6 + G2_init)
+            print('##############################################')
             # send_cmd('G1', 'current', -cur_motor)
             # send_cmd('G2', 'current', cur_motor)
             
@@ -824,7 +827,7 @@ while True:
         # send_cmd('G1', 'servo', 640)
         # send_cmd('G2', 'servo', 15)     
     
-    
+    # print('#######################################################################')
     
 
 #########################################################################

@@ -483,16 +483,19 @@ class VESC_USB:
     
     def get_status_data(self):
         st_data = [[np.nan]]*len(self.controller_id_list)
-        print(len(st_data))
+        # print('st_data: ', st_data)
+        # print(len(st_data))
         # print('controller_id_list: ', self.controller_id_list)
         for i in range(len(st_data)):
             # st_data[i] = [self.pos_data[i][0], 0, self.pos_data[i][1], self.rps_data[i][1], self.current_data[i][1], self.temp_data[i][1]]
-            # print('pos_data: ', self.pos_data)
-            # print('rps_data: ', self.rps_data)
-            # print('current_data: ', self.current_data)
-            # print('temp_data: ', self.temp_data)
+            print('len(st_data): ', len(st_data))
+            print('pos_data: ', self.pos_data)
+            print('rps_data: ', self.rps_data)
+            print('current_data: ', self.current_data)
+            print('temp_data: ', self.temp_data)
             st_data[i] = [self.pos_data[i][0], self.rps_data[i][1], self.current_data[i][1], self.temp_data[i][1]]
-            print(i)
+            # print(st_data[i])
+            # print(i)
         return st_data
 
     # USB RX Thread

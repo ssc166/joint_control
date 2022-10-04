@@ -9,7 +9,6 @@ from gazebo_msgs.srv import GetModelState, ApplyBodyWrench, GetLinkState
 from sensor_msgs.msg import Imu, JointState
 import math
 import WIP_utils as utils
-import modern_robotics as mr
 import time
 import os
 import Cal_joint as cj
